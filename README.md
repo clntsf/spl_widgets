@@ -13,8 +13,8 @@
       <th>Summary of Changes</th>
     </tr>
     <tr name="v0.2.5">
-      <td name="version_name" valign="top">
-        <h3><a href="https://pypi.org/project/spl-widgets/0.2.5/"> v0.2.5</a></h3>
+      <td name="version_name" align="center" valign="top">
+        <strong><a href="https://pypi.org/project/spl-widgets/0.2.5/"> v0.2.5</a></strong>
       </td>
       <td name="changes">
         <ul>
@@ -23,8 +23,8 @@
       </td>
     </tr>
     <tr name="v0.2.4">
-      <td name="version_name" valign="top">
-        <h3><a href="https://pypi.org/project/spl-widgets/0.2.4/">v0.2.4</a></h3>
+      <td name="version_name" align="center" valign="top">
+        <strong><a href="https://pypi.org/project/spl-widgets/0.2.4/">v0.2.4</a></strong>
       </td>
       <td name="changes">
         <ul>
