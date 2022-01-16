@@ -1,9 +1,12 @@
-<h1> spl_widgets <sub><sup> by CTSF</sup></sub></h1>
+<h1>spl_widgets <sub><sup> by CTSF</sup></sub></h1>
 <span><i>widgets created for the Barnard Speech Perception Laboratory</i></span>
 
-<h2>Changelog</h2>
+<h2>Changelog </h2>
 <span><i>Note that not every update will be documented here, only those which make large or important changes.</i></span>
-
+<details>
+  <summary>
+    <i>(Click to expand)</i>
+  </summary>
 <table name="Changelog">
     <tr name="Headings">
       <th>Version</th>
@@ -34,3 +37,4 @@
       </td>
     </tr> 
 </table>
+</details>
