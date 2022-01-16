@@ -11,4 +11,4 @@ modules_to_alias={
 
 cmd = argv[1]
 if cmd in modules_to_alias.keys(): modules_to_alias[cmd].main()
-else: print(f"Bad command ({cmd})")
+else: print("Bad command: " + repr(cmd))
