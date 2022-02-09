@@ -62,15 +62,6 @@ class Tuner():
 
         else: print("Invalid Key!")
 
-    # @staticmethod
-    # def get_df_from_filepath(filepath: str) -> tuple[pd.DataFrame, int, tuple[int,int]]:
-
-    #     df = pd.read_csv(filepath, sep='\t')
-    #     num_formants = int(df.columns[0])
-    #     size = (len(df.index), len(df.columns))
-
-    #     return df, num_formants, size
-
     def config(self, **kwargs) -> None:
         """Aesthetic function for manual change of the instance's attributes"""
         self.__dict__.update(kwargs)
@@ -130,20 +121,20 @@ class Tuner():
     def write_to_file(self, key: int = 0, outfn: str = None):
         ...
 
-# fp = "/Users/colin/desktop/tuner_misc/swxf/bark/bark.swx"
-# prm = {
-#     "filepath":fp,
-#     "interval":10,
-#     "scale":[4,6,8,9,11,1,3],
-# }
+fp = "/Users/colin/desktop/tuner_misc/swxf/bark/bark.swx"
+prm = {
+    "filepath":fp,
+    "interval":10,
+    "scale":[4,6,8,9,11,1,3],
+}
 
-# scales = [
-#     construct_default_scale(n+1, "Major Scale")
-#     for n in range(5)]
+scales = [
+    construct_default_scale(n+1, "Major Scale")
+    for n in range(5)]
 
-# t1 = Tuner.from_params(TuningParams(**prm))
-# t1.config(scale=scales)
-# x= t1.tune_multiscale(return_each=True, concat_all=False)
+t1 = Tuner.from_params(TuningParams(**prm))
+t1.config(scale=scales)
+x= t1.tune_multiscale(return_each=True, concat_all=False)
 
 # tune_cols(fp,10,construct_default_scale(1,'Major Scale'), True)
 

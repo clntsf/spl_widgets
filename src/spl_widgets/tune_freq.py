@@ -64,6 +64,3 @@ def tune_cols(filepath: str, interval: int, scale, tune_freqs):
     with open(f'{out_dir_filepath}/params.txt','w') as writer: writer.write('\n'.join(args))\
         
     return out_dir_filepath
-
-fp = '/Users/colin/desktop/tuner_misc/swxf/bark/bark.swx'
-tune_cols(fp,10,construct_default_scale(1,'Major Scale'), True)
