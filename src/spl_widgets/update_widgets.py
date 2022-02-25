@@ -3,6 +3,7 @@ modules_to_alias=["update_widgets","widgets_help","gorilla_clean","stk_swx","tun
 
 def main():
     os.system("pip3 -q install spl_widgets --upgrade")
+    os.system("pip -q install spl_widgets --upgrade")
     zprofile = f"{os.getenv('HOME')}/.zprofile"
     with open(zprofile,"r") as reader:
 
