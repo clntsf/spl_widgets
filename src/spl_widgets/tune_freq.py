@@ -7,9 +7,11 @@ from spl_widgets.misc_util import *
 
 def tune_cols(filepath: str, interval: int, scale, tune_freqs):
 
-    df = pd.read_csv(StringIO(open(filepath,'r').read()), sep='\t')
+    with open(filepath,'r') as reader:
+        content = StringIO( reader.read() )
+        df = pd.read_csv(content, sep='\t')
 
-    formants = int(len(df.columns)/2)
+    formants = df.columns[0]
     size = len(df.index)
     out_df = pd.DataFrame(df.iloc[:,0])
 
