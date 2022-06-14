@@ -1,18 +1,13 @@
 Metadata-Version: 2.1
 Name: spl-widgets
-Version: 0.2.10
+Version: 0.2.11
 Summary: Widgets for the Barnard Speech Perception Laboratory
 Home-page: https://github.com/ctsf1/spl_widgets
 Author: Colin Simon-Fellowes
 Author-email: colin.tsf@gmail.com
-License: UNKNOWN
 Project-URL: Changelog, https://github.com/ctsf1/spl_widgets#changelog
-Platform: UNKNOWN
 Classifier: Programming Language :: Python :: 3
 Classifier: License :: OSI Approved :: MIT License
 Classifier: Operating System :: OS Independent
 Requires-Python: >=3.6
 License-File: LICENSE
-
-UNKNOWN
-
