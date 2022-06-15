@@ -2,9 +2,8 @@ import pandas as pd
 from io import StringIO
 import tkinter as tk
 from tkinter import filedialog
-from sys import argv
+import sys
 from subprocess import run
-from itertools import chain
 
 def parse_df(df: pd.DataFrame) -> "tuple[int, pd.DataFrame]":   # Returns the desired columns (active formant freq and amp) from an inputted pd.DataFrame
 
@@ -17,10 +16,11 @@ def parse_df(df: pd.DataFrame) -> "tuple[int, pd.DataFrame]":   # Returns the de
 				break
 
 		else:
-			cols = list(chain([[f"f{fmt}",f"a{fmt}f"] for fmt in range(fmt)]))
+			cols = ["f0"]
+			for x in range(1,fmt): cols.extend([f"f{x}", f"a{x}f"])
 			return fmt-1, df[cols]
 
-def stk_to_swx(filepath: str) -> str:
+def stk_to_swx(filepath):
 	multipliers = [.7,.4,.2,.1,0.5]
 
 	# --- Read .stk file, and take the info to a dataframe --- #
@@ -28,7 +28,7 @@ def stk_to_swx(filepath: str) -> str:
 		file_content = ''.join(reader.readlines()[8:])
 
 	formants, df = parse_df( pd.read_csv(StringIO(file_content), sep='\t') )
-	amp_cols = [f"a{f+1}" for f in range(formants)]			# get amp col headers and number of formants
+	amp_cols = [f"a{f+1}f" for f in range(formants)]			# get amp col headers and number of formants
 
 	# --- Correct amplitude vals --- #
 	amp_max = [max(df[col]) for col in amp_cols]
@@ -38,43 +38,43 @@ def stk_to_swx(filepath: str) -> str:
 
 	# --- Prettifying and output --- #
 	df.columns = [formants]+['']*(formants*2)
-	outFilepath = filepath[:-4]
+	out_fp = filepath[:-4]
 
-	df.to_csv(f"{outFilepath}.tsv", index=False, sep='\t')
-	run(["mv", f"{outFilepath}.tsv", f"{outFilepath}.swx"], capture_output=False)
+	df.to_csv(f"{out_fp}.tsv", index=False, sep='\t')
+	run(["mv", f"{out_fp}.tsv", f"{out_fp}.swx"], capture_output=False)
 
-	return outFilepath
+	return out_fp
 
 
-def main() -> None:
+def main():
 	# --- Get filepath to .stk file --- #
 	root = tk.Tk()
 	root.focus_force()
 	root.wm_geometry("0x0+0+0")
 
-	if "folder" in argv:
-		filepath = filedialog.askdirectory()
+	if "folder" in sys.argv:
+		out_fp = filepath = filedialog.askdirectory()
 		if filepath == '': return False
 
-		filesInDir = str(run(["ls", filepath], capture_output=True).stdout)[2:-1].split('\\n')[:-1]		# gets and parses terminal ls output into list of files in directory
-		operableFiles = [file for file in filesInDir if file.endswith(".stk")]							# gets files with .stk extension
+		files_in_dir = str(run(["ls", filepath], capture_output=True).stdout)[2:-1].split('\\n')[:-1]		# gets and parses terminal ls output into list of files in directory
+		operable_files = [file for file in files_in_dir if file.endswith(".stk")]							# gets files with .stk extension
 
-		for file in operableFiles:
+		for file in operable_files:
 			stk_to_swx(f'{filepath}/{file}')
 			print(f"File {file} has been converted")
 
-		print('-'*30+"\nCompatible files have been successfully converted")
+		print("\nCompatible files have been successfully converted")
 
 	else:
 		filepath=filedialog.askopenfilename(filetypes=[('',".stk")])
 		if filepath == '': return False
 
-		outFilepath = stk_to_swx(filepath)
-		print('\n'+f"File written to {outFilepath}.swx")
+		out_fp = stk_to_swx(filepath)
+		print('\n'+f"File written to {out_fp}.swx.")
 
 	# --- Display completion message, open .swx file/dir if user chooses --- #
 	if input("Open Output? (y/n): ").lower() == 'y':
-		run(["open", f"{outFilepath}.swx"], capture_output=False)
+		run(["open", f"{out_fp}.swx"], capture_output=False)
 
 
 if __name__ == "__main__":
