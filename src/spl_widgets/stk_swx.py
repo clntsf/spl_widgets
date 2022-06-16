@@ -5,6 +5,8 @@ from tkinter import filedialog
 import sys
 from subprocess import run
 
+class MalformedFileError(Exception): pass
+
 def parse_df(df: pd.DataFrame) -> "tuple[int, pd.DataFrame]":   # Returns the desired columns (active formant freq and amp) from an inputted pd.DataFrame
 
 	df["f0"] = [n*10 for n in range(len(df.index))]
@@ -17,7 +19,7 @@ def parse_df(df: pd.DataFrame) -> "tuple[int, pd.DataFrame]":   # Returns the de
 
 		else:
 			cols = ["f0"]
-			for x in range(1,fmt): cols.extend([f"f{x}", f"a{x}f"])
+			for x in range(1,fmt): cols.extend([f"f{x}",f"a{x}f"])
 			return fmt-1, df[cols]
 
 def stk_to_swx(filepath):
@@ -26,8 +28,12 @@ def stk_to_swx(filepath):
 	# --- Read .stk file, and take the info to a dataframe --- #
 	with open(filepath, 'r') as reader:
 		file_content = ''.join(reader.readlines()[8:])
+		
+	try:
+		(formants, df) = parse_df( pd.read_csv(StringIO(file_content), sep='\t') )
+	except Exception:
+		raise MalformedFileError("File is malformed and does not conform to generic .stk format")
 
-	formants, df = parse_df( pd.read_csv(StringIO(file_content), sep='\t') )
 	amp_cols = [f"a{f+1}f" for f in range(formants)]			# get amp col headers and number of formants
 
 	# --- Correct amplitude vals --- #
