@@ -39,8 +39,13 @@ def stk_to_swx(filepath):
 	# --- Correct amplitude vals --- #
 	amp_max = [max(df[col]) for col in amp_cols]
 	for i in range(formants):
-		for n in df[amp_cols[i]]:
-			n = multipliers[i] * (amp_max[i] / n) if n > 30 else 0
+		def scalemult(cell):
+			if cell<=30: return 0
+			return round(multipliers[i] * (amp_max[i] / cell), 4)
+	
+		colnm = amp_cols[i]
+		col = df[colnm]
+		df[colnm] = list(map(scalemult, col))
 
 	# --- Prettifying and output --- #
 	df.columns = [formants]+['']*(formants*2)

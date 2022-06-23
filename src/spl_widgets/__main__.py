@@ -1,14 +1,31 @@
-from sys import argv
-from spl_widgets import update_widgets, gorilla_clean, stk_swx, widgets_help, tuner
+from argparse import ArgumentParser, RawTextHelpFormatter
+import importlib
+from spl_widgets import tuner, stk_swx, widgets_help, update_widgets, gorilla_clean
 
-modules_to_alias={
-    "update_widgets": update_widgets,
-    "widgets_help": widgets_help,
-    "gorilla_clean": gorilla_clean,
+parser_desc = "Run one of the python modules created by CTSF for the Barnard Speech Perception Laboratory"
+arg_help = "(Positional) The module to run. Options: \
+    \n\t- tuner \n\t- stk_swx \n\t- gorilla_clean \n\t- widgets_help \n\t- update_widgets"
+
+mods={
+    "tuner": tuner,
     "stk_swx": stk_swx,
-    "tuner": tuner
+    "widgets_help": widgets_help,
+    "update_widgets": update_widgets,
+    "gorilla_clean": gorilla_clean
 }
 
-cmd = argv[1]
-if cmd in modules_to_alias.keys(): modules_to_alias[cmd].main()
-else: print("Bad command: " + repr(cmd))
+parser = ArgumentParser(
+    "runmod",
+    description=parser_desc,
+    formatter_class=RawTextHelpFormatter
+)
+parser.add_argument("mod", metavar="M", help=arg_help)
+
+args = parser.parse_args()
+cmd = args.mod
+
+# Programmatically import and run the desired module, instead of importing everything
+try:
+    mods[cmd].main()
+except ModuleNotFoundError:
+    print("Bad command: " + repr(cmd))
