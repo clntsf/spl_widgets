@@ -2,7 +2,8 @@
 <span><i>widgets created for the Barnard Speech Perception Laboratory</i></span>
 
 <h2>Changelog </h2>
-<span><i>Note that not every update will be documented here, only those which make large or important changes.</i></span>
+<span><i>Note that not every update will be documented here, only those which make large or important changes.
+<br>(Or that I am non-lazy enough to document, because formatting is a drag)</i></span>
 <details>
   <summary>
     <i>(Click to expand)</i>

@@ -1,88 +1,147 @@
 import pandas as pd
-import tkinter as tk
+import re
 from tkinter import filedialog
-import sys
 from subprocess import run
+from pathlib import Path
+from argparse import ArgumentParser
 
-data_modules={
-    "awk4":"Cooldown",
-    "l5it":"Sentence Transcription",
-    "9bbq": "Headphone Test"
+# yeah maybe it's black magic but it's so convenient
+subj_file_regex = r"(^data_exp_.+\-(\w{4})\-([0-9]+).xlsx$)"
+cfg_regex = r"^(\w{4}) \"(.+)\" \[(.+)\]$"
+cfg_cols_regex = r"\"(\w+?)\"(?:, |$)"
+
+cols_hcheck= ["Response", "ANSWER", "Correct","audio"]
+cols_default = ["Response", "audio"]
+cfg: dict[str, tuple[str,list[str]]] = {
+    "awk4": ["Cooldown", cols_default],
+    "l5it": ["Sentence Transcription", cols_default],
+    "9bbq": ["Headphone Test", cols_hcheck]
 }
 
-desired_c_CHECK = ["Response", "ANSWER", "Correct","audio"]
-desired_c_DEFAULT = ["Response", "audio"]
+# Help text at the top of cfg.txt
+cfg_help="""
+INSTRUCTIONS ON HOW TO FORMAT THIS FILE:
+---------------------------------------
 
-class Subject():
+Each line should contain the following:
+ - The name of the key to look for (ex. 9bbq). Should be four letters, look in the filename
+ - The name of the task corresponding to this key in quotes (ex. "Headphone Test")
+ - A list of columns to include in the cleaned .xlsx file for this task, in the format:
+    ["col1", "col2", "col3"]
 
-    id: int
-    source: str
-    outfp: str
-    tasks: "dict[str,pd.DataFrame]" = {}
+The following lines are the default configuration of the program
+and can be used as examples of proper format
 
-    def __init__(self, **kwargs):
-        self.source = kwargs.get("source") or self.get_source_by_filedialog()
+(To restore them in case of deletion, just delete this file and
+run the program again, and a new file will be generated)
 
-        self.outfp = kwargs.get("out") or self.source
+"""
 
-        self.id = int(self.source[self.source.rfind("_")+1:])
+cfg_path = __file__[:__file__.rfind("/")] + "/cfg.txt"
 
-    def get_source_by_filedialog(self):
-        return filedialog.askdirectory(title="Subject Data Folder: ")
+def write_default_cfg():
 
-    def parse(self):
-        if self.source == '': return False
-        for task_key in data_modules.keys():
-            filepath_to_task = f"{self.source}/{self.source[self.source.rfind('/'):self.source.rfind('_')]}_task-{task_key}-{self.id}.xlsx"
-            self.tasks[task_key] = pd.read_excel(filepath_to_task)
+    path = cfg_path
+    with open(path, "w") as writer:
+        def_cfg = [[ k, n, '", "'.join(c) ] for (k,(n,c)) in cfg.items()]   # welcome to format hell
+        def_cfg = [f'{k} "{n}" ["{c}"]' for (k,n,c) in def_cfg]
+        def_cfg = "\n".join(def_cfg)
 
-            self.parse_file(task_key)
-        
-        self.write_to_excel()
+        writer.write(cfg_help+def_cfg)
 
-    def parse_file(self, task_key):
-        df = self.tasks[task_key]
-        desired_c = [desired_c_DEFAULT,desired_c_CHECK][task_key == "9bbq"]
+def get_cfg():
 
-        df_formatted = df[desired_c].loc[[type(n) == str and "response" in n for n in df["Zone Type"]]]
+    try:                                    # read cfg from file
+        with open(cfg_path, "r") as reader:
+            text = reader.read()
+            lines = re.findall(cfg_regex, text, re.MULTILINE)
+            return { k: [n, re.findall( cfg_cols_regex, c )] for (k,n,c) in lines }
+    except FileNotFoundError:               # write default cfg to file & return it if file does not exist
+        write_default_cfg()
+        return cfg
 
-        if task_key == "9bbq":
-            pct_correct = str(round(sum(df_formatted["Correct"])/len(df_formatted.index)*100,2))+"%"
-            pct_correct_row = pd.DataFrame([["PERCENT CORRECT","","",pct_correct]], columns=desired_c)
-            df_formatted = pd.concat([df_formatted, pct_correct_row],axis=0)
+def files_in_dir(dir: str):
+    return run(["ls", dir], capture_output=True).stdout.decode("utf-8")
 
-        self.tasks[task_key] = df_formatted
+def get_subj_files_in_folder(folder: str):
 
-    def write_to_excel(self):
-        writer = pd.ExcelWriter(f"{self.outfp}/{self.id}_CLEANED.xlsx", engine="xlsxwriter")
+    files = files_in_dir(folder)
+    groups = re.findall(subj_file_regex, files, re.MULTILINE) # (fp, key)
+    subj_id = groups[0][2]
 
-        for task_key, df in self.tasks.items():
-            df.to_excel(writer, sheet_name = data_modules[task_key], index=False)
+    groups = [(f"{folder}/{filename}", key) for (filename, key, _id) in groups]
+    return (subj_id, [*filter(lambda g: g[1] in cfg, groups)])
 
-        writer.save()
+def process_subject_folder(folder: str|None = ...):
+    if folder == ...:
+        folder = filedialog.askdirectory()
+        if folder == "": return False       # user bailed in filedialog
 
+    def good_cell(c: str):
+        return (
+            isinstance(c,str) and c != ""
+            and not c.startswith("AUDIO")
+        )
+
+    (subj_id, groups) = get_subj_files_in_folder(folder)
+    outfp = f"{folder}/{subj_id}_cleaned.xlsx"
+    writer = pd.ExcelWriter(outfp, engine="xlsxwriter")
+
+    for (fp, key) in groups:
+        data = pd.read_excel(fp)
+        (task_name, desired_cols) = cfg[key]
+
+        data: pd.DataFrame = data.loc[map(good_cell, data["Response"]), desired_cols]
+        data.to_excel(writer, sheet_name=task_name, index=False)
+
+    writer.save()
+    return folder
+
+def make_argparser():
+    parser_desc = "Cleans one (or a folder of) folder of subject files from Gorilla's testing service"
+    parser = ArgumentParser(prog="gorilla", description=parser_desc)
+
+    parser.add_argument("--f",
+        action="store_const",
+        const=True, default=False,
+        help= "(flag) Process a batch of subject data folders instead of a single one"
+    )
+
+    parser.add_argument("--c",
+        action="store_const",
+        const=True, default=False,
+        help="Open the program's config files in a text editor (will not run the main program)"
+    )
+
+    return parser
 
 def main():
-    
-    root = tk.Tk()
-    root.focus_force()
-    root.wm_geometry("0x0+0+0")
 
-    args = sys.argv
-    if 'folder' in args:
-        data_dir = filedialog.askdirectory(title="Directory containing subject folders: ")
-        if data_dir == '': return False
+    parser = make_argparser()
+    args = parser.parse_args()
 
-        in_dir = str(run(["ls",data_dir],capture_output=True).stdout)[2:-2].split('\\n')
-        
-        for item in in_dir:
-            if item.startswith("data_exp"):
-                subj = Subject(source=f"{data_dir}/{item}", out=data_dir)
-                subj.parse()
+    if args.c:                                          # User has selected to open config
+        run(["open", cfg_path])
+        return True
 
-    else:
-        subj1 = Subject()
-        subj1.parse()
+    if args.f:                                          # User has selected to batch clean
+        folder = filedialog.askdirectory(title="Directory with batch of subject data folders")
+        subfolders = files_in_dir(folder).splitlines()
+
+        for fold in subfolders:
+            fp = f"{folder}/{fold}"
+            if Path(fp).is_dir():
+                try:
+                    process_subject_folder(fp)
+                    print(f"Cleaned Subject data in folder '{fold}'")
+                except Exception:
+                    print(f"[WARN] Malformed subject data / other directory for Cleaner: {fold}")
+        return True
+
+    fold = process_subject_folder()                     # Program is running in default single-clean mode
+    print(f"Cleaned Subject data in folder '{fold}'")
+    return True
 
 if __name__ == "__main__":
+    cfg = get_cfg()
     main()
