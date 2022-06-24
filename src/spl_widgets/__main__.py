@@ -21,7 +21,7 @@ parser = ArgumentParser(
 )
 parser.add_argument("mod", metavar="M", help=arg_help)
 
-args = parser.parse_args()
+args, unknown = parser.parse_known_args()
 cmd = args.mod
 
 # Programmatically import and run the desired module, instead of importing everything
