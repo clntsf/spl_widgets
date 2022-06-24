@@ -101,6 +101,8 @@ def process_subject_folder(folder: str|None = ...):
     return folder
 
 def main():
+    global cfg
+    cfg = get_cfg()
     args = sys.argv
 
     if ("--c" in args) or ("-C" in args):                   # User has selected to open config
@@ -126,5 +128,4 @@ def main():
     return True
 
 if __name__ == "__main__":
-    cfg = get_cfg()
     main()
