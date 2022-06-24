@@ -1,9 +1,12 @@
-import pandas as pd
-import re
-from tkinter import filedialog
-from subprocess import run
+import re                       # config and filename parsing
+import pandas as pd             # subject file parsing
+
+# filesystem / input args
 from pathlib import Path
-from argparse import ArgumentParser
+from subprocess import run
+import sys
+from tkinter import filedialog
+
 
 # yeah maybe it's black magic but it's so convenient
 subj_file_regex = r"(^data_exp_.+\-(\w{4})\-([0-9]+).xlsx$)"
@@ -97,34 +100,14 @@ def process_subject_folder(folder: str|None = ...):
     writer.save()
     return folder
 
-def make_argparser():
-    parser_desc = "Cleans one (or a folder of) folder of subject files from Gorilla's testing service"
-    parser = ArgumentParser(prog="gorilla", description=parser_desc)
-
-    parser.add_argument("--f",
-        action="store_const",
-        const=True, default=False,
-        help= "(flag) Process a batch of subject data folders instead of a single one"
-    )
-
-    parser.add_argument("--c",
-        action="store_const",
-        const=True, default=False,
-        help="Open the program's config files in a text editor (will not run the main program)"
-    )
-
-    return parser
-
 def main():
+    args = sys.argv
 
-    parser = make_argparser()
-    args = parser.parse_args()
-
-    if args.c:                                          # User has selected to open config
+    if ("--c" in args) or ("-C" in args):                   # User has selected to open config
         run(["open", cfg_path])
         return True
 
-    if args.f:                                          # User has selected to batch clean
+    if ("--f" in args) or ("-F" in args):                   # User has selected to batch clean
         folder = filedialog.askdirectory(title="Directory with batch of subject data folders")
         subfolders = files_in_dir(folder).splitlines()
 
