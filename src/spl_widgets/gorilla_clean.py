@@ -1,17 +1,14 @@
-import re                       # config and filename parsing
-import pandas as pd             # subject file parsing
-
-# filesystem / input args
-from pathlib import Path
+import re                           # config and filename parsing
+import pandas as pd                 # subject file parsing
+from argparse import ArgumentParser # argparsing
+from pathlib import Path            # filesystem I/O below
 from subprocess import run
-import sys
 from tkinter import filedialog
-
 
 # yeah maybe it's black magic but it's so convenient
 subj_file_regex = r"(^data_exp_.+\-(\w{4})\-([0-9]+).xlsx$)"
 cfg_regex = r"^(\w{4}) \"(.+)\" \[(.+)\]$"
-cfg_cols_regex = r"\"(\w+?)\"(?:, |$)"
+cfg_cols_regex = r"\"(.+?)\"(?:, |$)"
 
 cols_hcheck= ["Response", "ANSWER", "Correct","audio"]
 cols_default = ["Response", "audio"]
@@ -83,7 +80,10 @@ def process_subject_folder(folder: str|None = ...):
     def good_cell(c: str):
         return (
             isinstance(c,str) and c != ""
-            and not c.startswith("AUDIO")
+            and not any(
+                c.startswith(x)
+                for x in ["AUDIO", "BEGIN", "END"]
+            )
         )
 
     (subj_id, groups) = get_subj_files_in_folder(folder)
@@ -95,21 +95,41 @@ def process_subject_folder(folder: str|None = ...):
         (task_name, desired_cols) = cfg[key]
 
         data: pd.DataFrame = data.loc[map(good_cell, data["Response"]), desired_cols]
+        data = data.dropna('index')
         data.to_excel(writer, sheet_name=task_name, index=False)
 
     writer.save()
     return folder
 
-def main():
+def make_argparser():
+    parser_desc = "Cleans one (or a folder of) folder of subject files from Gorilla's testing service"
+    parser = ArgumentParser(prog="gorilla_clean", description=parser_desc)
+
+    parser.add_argument("--f",
+        action="store_const",
+        const=True, default=False,
+        help= "(flag) Process a batch of subject data folders instead of a single one"
+    )
+
+    parser.add_argument("--c",
+        action="store_const",
+        const=True, default=False,
+        help="Open the program's config files in a text editor (will not run the main program)"
+    )
+
+    return parser
+
+def main(*args):
     global cfg
     cfg = get_cfg()
-    args = sys.argv
+    parser = make_argparser()
+    args = parser.parse_args(args)
 
-    if ("--c" in args) or ("-C" in args):                   # User has selected to open config
+    if (args.c):                   # User has selected to open config
         run(["open", cfg_path])
         return True
 
-    if ("--f" in args) or ("-F" in args):                   # User has selected to batch clean
+    if (args.f):                   # User has selected to batch clean
         folder = filedialog.askdirectory(title="Directory with batch of subject data folders")
         subfolders = files_in_dir(folder).splitlines()
 

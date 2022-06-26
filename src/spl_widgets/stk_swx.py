@@ -57,7 +57,7 @@ def stk_to_swx(filepath):
 	return out_fp
 
 
-def main():
+def main(*args):
 	# --- Get filepath to .stk file --- #
 	root = tk.Tk()
 	root.focus_force()

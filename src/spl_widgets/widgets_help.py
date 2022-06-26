@@ -8,7 +8,7 @@ widget_desc={
 
 menustr = "HELP MENU: CTSF's PYTHON WIDGETS"
 
-def main():
+def main(*args):
     print(f"{menustr}\n{'*'*len(menustr)}\n")
     for k,v in widget_desc.items():
         print(f"{k}:\n{'*'*(len(k)+1)}\n{v}\n")

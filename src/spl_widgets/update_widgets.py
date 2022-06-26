@@ -1,6 +1,6 @@
 import os
 
-def main():
+def main(*args):
     os.system("pip3 -q install spl_widgets --upgrade")
     os.system("pip -q install spl_widgets --upgrade")
 

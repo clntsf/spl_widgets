@@ -1,5 +1,5 @@
 from argparse import ArgumentParser, RawTextHelpFormatter
-import importlib
+from sys import argv
 from spl_widgets import tuner, stk_swx, widgets_help, update_widgets, gorilla_clean
 
 parser_desc = "Run one of the python modules created by CTSF for the Barnard Speech Perception Laboratory"
@@ -21,11 +21,11 @@ parser = ArgumentParser(
 )
 parser.add_argument("mod", metavar="M", help=arg_help)
 
-args, unknown = parser.parse_known_args()
+args = parser.parse_args(argv[1:2])
 cmd = args.mod
 
 # Programmatically import and run the desired module, instead of importing everything
 try:
-    mods[cmd].main()
+    mods[cmd].main(*argv[2:])
 except ModuleNotFoundError:
     print("Bad command: " + repr(cmd))
