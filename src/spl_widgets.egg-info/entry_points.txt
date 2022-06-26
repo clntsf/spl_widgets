@@ -1,0 +1,5 @@
+[console_scripts]
+gorilla_clean = spl_widgets.gorilla_clean:main
+stk_swx = spl_widgets.stk_swx:main
+tuner = spl_widgets.tuner:main
+widgets_help = spl_widgets.widgets_help:main

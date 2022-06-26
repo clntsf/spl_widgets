@@ -105,13 +105,13 @@ def make_argparser():
     parser_desc = "Cleans one (or a folder of) folder of subject files from Gorilla's testing service"
     parser = ArgumentParser(prog="gorilla_clean", description=parser_desc)
 
-    parser.add_argument("--f",
+    parser.add_argument("-f", "--folder",
         action="store_const",
         const=True, default=False,
-        help= "(flag) Process a batch of subject data folders instead of a single one"
+        help= "Process a batch of subject data folders instead of a single one"
     )
 
-    parser.add_argument("--c",
+    parser.add_argument("-c", "--config",
         action="store_const",
         const=True, default=False,
         help="Open the program's config files in a text editor (will not run the main program)"
@@ -119,17 +119,19 @@ def make_argparser():
 
     return parser
 
-def main(*args):
+def main():
     global cfg
-    cfg = get_cfg()
-    parser = make_argparser()
-    args = parser.parse_args(args)
 
-    if (args.c):                   # User has selected to open config
+    parser = make_argparser()
+    args = parser.parse_args()
+
+    cfg = get_cfg()                     # load cfg if user has not selected -h
+
+    if (args.c):                        # User has selected to open config
         run(["open", cfg_path])
         return True
 
-    if (args.f):                   # User has selected to batch clean
+    if (args.f):                        # User has selected to batch clean
         folder = filedialog.askdirectory(title="Directory with batch of subject data folders")
         subfolders = files_in_dir(folder).splitlines()
 
@@ -143,7 +145,7 @@ def main(*args):
                     print(f"[WARN] Malformed subject data / other directory for Cleaner: {fold}")
         return True
 
-    fold = process_subject_folder()                     # Program is running in default single-clean mode
+    fold = process_subject_folder()     # Program is running in default single-clean mode
     print(f"Cleaned Subject data in folder '{fold}'")
     return True
 

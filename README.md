@@ -2,6 +2,7 @@
 <span><i>widgets created for the Barnard Speech Perception Laboratory</i></span>
 
 <h2>Changelog </h2>
+<h3>[NOTE]: June 2022 - This changelog is now SEVERELY out of date as a result of some lazy POS who declines to update it regularly. But on the plus side, less work for me </h3>
 <span><i>Note that not every update will be documented here, only those which make large or important changes.
 <br>(Or that I am non-lazy enough to document, because formatting is a drag)</i></span>
 <details>

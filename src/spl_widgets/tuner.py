@@ -39,7 +39,7 @@ def getscale(Key: str):
 
     return tune_freqs, interval, scale_list
 
-def main(*args):
+def main():
 
     root=Tk()
     root.title("CTSF's SWX Tuner")

@@ -1,8 +1,7 @@
 import pandas as pd
 from io import StringIO
-import tkinter as tk
 from tkinter import filedialog
-import sys
+from argparse import ArgumentParser
 from subprocess import run
 
 class MalformedFileError(Exception): pass
@@ -32,7 +31,7 @@ def stk_to_swx(filepath):
 	try:
 		(formants, df) = parse_df( pd.read_csv(StringIO(file_content), sep='\t') )
 	except Exception:
-		raise MalformedFileError("File is malformed and does not conform to generic .stk format")
+		raise MalformedFileError(f"File @ {filepath} is malformed and does not conform to generic .stk format")
 
 	amp_cols = [f"a{f+1}f" for f in range(formants)]			# get amp col headers and number of formants
 
@@ -56,16 +55,28 @@ def stk_to_swx(filepath):
 
 	return out_fp
 
+def make_parser():
+	parser = ArgumentParser(prog="stk_swx")
+	parser.add_argument("-f", "--folder",
+		action="store_const",
+		const=True, default=False,
+		help="Convert a folder of .stk files, as opposed to a single file"
+	)
+	return parser
 
-def main(*args):
+def main():
 	# --- Get filepath to .stk file --- #
-	root = tk.Tk()
-	root.focus_force()
-	root.wm_geometry("0x0+0+0")
 
-	if "folder" in sys.argv:
+	parser = make_parser()
+	args = parser.parse_args()
+
+	USER_BAIL_MSG = "[EXIT] User bailed during selection of target directory"
+
+	if args.folder:
 		out_fp = filepath = filedialog.askdirectory()
-		if filepath == '': return False
+		if filepath == '':	# user bailed in filedialog
+			print(USER_BAIL_MSG)
+			return False
 
 		files_in_dir = str(run(["ls", filepath], capture_output=True).stdout)[2:-1].split('\\n')[:-1]		# gets and parses terminal ls output into list of files in directory
 		operable_files = [file for file in files_in_dir if file.endswith(".stk")]							# gets files with .stk extension
@@ -78,15 +89,16 @@ def main(*args):
 
 	else:
 		filepath=filedialog.askopenfilename(filetypes=[('',".stk")])
-		if filepath == '': return False
+		if filepath == '':			# user bailed during filedialog
+			print(USER_BAIL_MSG)
+			return False
 
-		out_fp = stk_to_swx(filepath)
-		print('\n'+f"File written to {out_fp}.swx.")
+		out_fp = stk_to_swx(filepath) + ".swx"
+		print('\n'+f"File written to {out_fp}")
 
 	# --- Display completion message, open .swx file/dir if user chooses --- #
 	if input("Open Output? (y/n): ").lower() == 'y':
-		run(["open", f"{out_fp}.swx"], capture_output=False)
-
+		run(["open", out_fp], capture_output=False)
 
 if __name__ == "__main__":
 	main()
