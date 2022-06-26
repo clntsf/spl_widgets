@@ -127,11 +127,11 @@ def main():
 
     cfg = get_cfg()                     # load cfg if user has not selected -h
 
-    if (args.c):                        # User has selected to open config
+    if (args.config):                        # User has selected to open config
         run(["open", cfg_path])
         return True
 
-    if (args.f):                        # User has selected to batch clean
+    if (args.folder):                        # User has selected to batch clean
         folder = filedialog.askdirectory(title="Directory with batch of subject data folders")
         subfolders = files_in_dir(folder).splitlines()
 

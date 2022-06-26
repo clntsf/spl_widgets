@@ -5,7 +5,7 @@ import setuptools
 
 setuptools.setup(
     name="spl_widgets",
-    version="0.4.1",
+    version="0.4.3",
     author="Colin Simon-Fellowes",
     author_email="colin.tsf@gmail.com",
     description="Widgets for the Barnard Speech Perception Laboratory",
@@ -18,7 +18,7 @@ setuptools.setup(
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
-        "Operating System :: OS Independent",
+        "Operating System :: MacOS",
     ],
     package_dir={"": "src"},
     packages=setuptools.find_packages(where="src"),
@@ -26,6 +26,7 @@ setuptools.setup(
     python_requires=">=3.6",
     entry_points='''
         [console_scripts]
+        lighttheme=spl_widgets:lighttheme_force
         gorilla_clean=spl_widgets.gorilla_clean:main
         tuner=spl_widgets.tuner:main
         stk_swx=spl_widgets.stk_swx:main
