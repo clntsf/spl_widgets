@@ -165,7 +165,7 @@ class TunerApp(Tk):
 
     def make_scale(self):
         tune_freqs = self.tune_freqs_var.get()
-        interval = self.interval_var.get()
+        interval = str(self.interval_var.get()).zfill(2)
 
         scale = self.get_scale_vals()
         keys = "".join("1"  if k in scale else "0" for k in range(12,0,-1))

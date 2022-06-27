@@ -69,7 +69,7 @@ def tune_cols(filepath: str, interval: int, scale, tune_freqs):
 
     # Creates params.txt file
     notes_tuning = hex(sum([2**i*(i+1 in scale) for i in range(12)]))[2:]
-    tuning_key = f"{int(tune_freqs)}{interval}-{notes_tuning}"
+    tuning_key = f"{int(tune_freqs)}{str(interval).zfill(2)}-{notes_tuning}"
 
     args=[
         'Tuning Parameters:',
