@@ -3,8 +3,7 @@ from io import StringIO
 from tkinter import filedialog
 from argparse import ArgumentParser
 from subprocess import run
-
-class MalformedFileError(Exception): pass
+from spl_widgets.misc_util import MalformedFileError
 
 def parse_df(df: pd.DataFrame) -> "tuple[int, pd.DataFrame]":   # Returns the desired columns (active formant freq and amp) from an inputted pd.DataFrame
 

@@ -4,21 +4,35 @@ from io import StringIO
 from subprocess import run
 from datetime import datetime
 from spl_widgets.misc_util import *
+from textwrap import dedent
+
+bad_file_str = dedent("""
+    File structure of {} is malformed and cannot be read by tune_freq
+    only .swx files created with stk_swx are guaranteed to work with tuner.
+    If this file was created with stk_swx, please alert me or Prof. Remez
+    and provide a copy of the file and its .stk equivalent (if possible)."""
+)
 
 def tune_cols(filepath: str, interval: int, scale, tune_freqs):
 
-    df = pd.read_csv(StringIO(open(filepath,'r').read()), sep='\t')
+    try:
+        df = pd.read_csv(
+            StringIO(open(filepath,'r').read()),
+            sep='\t', skiprows=[0], header=None
+        ).dropna(axis=1)
+    except Exception:
+        raise MalformedFileError(bad_file_str.format(filepath))
 
     formants = len(df.columns)//2
-    size = len(df.index)
+    size = df.shape[0]
     out_df = pd.DataFrame(df.iloc[:,0])
 
     scale_notes = construct_note_freqs(scale)
+    for fmt in range(formants):
+        amp_col = df.iloc[:,2*fmt+2]
 
-    for i in range(formants):
-
-        amp_col = df.iloc[:,2*i+2]
-        freq_col = [n * (amp_col[j]>0) for j, n in enumerate(df.iloc[:,2*i+1])]
+        freq_col = df.iloc[:,2*fmt+1]
+        freq_col = np.where(amp_col>0, freq_col, 0)
         new_col =[]
  
         for slice_start in range(0, size, interval):
@@ -34,7 +48,12 @@ def tune_cols(filepath: str, interval: int, scale, tune_freqs):
 
             new_col+=[range_freq]*len(freq_slice)
 
-        out_df[f'F{i}']=new_col; out_df[f'A{i}']=amp_col
+        for i, cell in enumerate(new_col):
+            if cell == 0:
+                new_col[i] = max(new_col[max(0,i-1):i+2])
+        
+        out_df[f'F{fmt}']=new_col
+        out_df[f'A{fmt}']=amp_col
 
     out_df.columns = [formants]+['']*(2*formants)
 
@@ -61,6 +80,7 @@ def tune_cols(filepath: str, interval: int, scale, tune_freqs):
         f'Tuning Key: {tuning_key}'
         ]
     
-    with open(f'{out_dir_filepath}/params.txt','w') as writer: writer.write('\n'.join(args))\
+    with open(f'{out_dir_filepath}/params.txt','w') as writer:
+        writer.write('\n'.join(args))
         
     return out_dir_filepath

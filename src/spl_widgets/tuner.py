@@ -23,247 +23,347 @@ class RadioFrame(Frame):
         for b in self.radios: b.pack(side=packside, anchor=anchorside)
 
     def disable(self):
-        for b in self.radios: b.configure(state="disabled")
+        for b in self.radios:
+            b.configure(state="disabled")
 
     def enable(self):
-        for b in self.radios: b.configure(state="normal")
+        for b in self.radios:
+            b.configure(state="normal")
 
-def getscale(Key: str):
+class TunerApp(Tk):
 
-    tune_freqs = int(Key[0])
-    interval = int(Key[1:3])
+    def validate_key(self, *args):
+        key = self.key_var.get()
+        new_key = key
 
-    scale_bin = bin(int(Key[-3:],base=16))[2:]
-    scale_bin = '0'*(12-len(scale_bin))+scale_bin
-    scale_list = [i for i in range(1,13) if scale_bin[-i] == "1"]
-
-    return tune_freqs, interval, scale_list
-
-def main():
-
-    root=Tk()
-    root.title("CTSF's SWX Tuner")
-    root.geometry("470x330+50+50")
-    root.resizable(False, False)
-
-    intervalVar = StringVar()
-    fileVar = StringVar()
-    scaleVar = StringVar(value="C Major Scale")
-    keyVar = StringVar()
-
-    tuneTypeVar = IntVar()
-    showScalesVar = IntVar()
-    noteVars = [IntVar() for _ in range(len(notes))]
-    tuneFreqsVar = IntVar(value=1)
-
-    cb_values = [f"{n} Major Scale" for n in notes]
-    cb_values_ext = [f"{notes[i]} {n}" for n in default_scales.keys() for i in range(len(notes))]
-
-    def validateKey(*args):
-        key = keyVar.get(); newkey = key
-        invalidKey = (
+        invalid_key = (
             len(key) > 7 or
             (4<len(key)<7 and not (key[-1].isdigit() or key[-1].lower() in 'abcdef')) or
             (len(key) == 4 and key[-1] != "-") or
             1<len(key)<4 and not key[-1].isdigit() or
             (len(key)==1 and key[0] not in '01'))
 
-        if invalidKey: newkey = key[:-1]
-        keyVar.set(newkey.upper())
+        if invalid_key:
+            new_key = key[:-1]
+        self.key_var.set(new_key.upper())
 
-    def processTuningKey():
+    def get_scale(self):
 
-        if len(keyVar.get())!=7: return -1
+        key = self.key_var.get()
 
-        tune_freqs, interval, scale_list = getscale(keyVar.get())
-        tuneFreqsVar.set(tune_freqs)
-        intervalVar.set(interval)
-        selectorRadiosFrame.radios[1].invoke()
+        tune_freqs = int(key[0])
+        interval = int(key[1:3])
 
-        for i,n in enumerate(noteVars):
+        scale_bin = bin(int(key[-3:],base=16))[2:]
+        scale_bin = scale_bin.zfill(12)
+        scale_list = [i for i in range(1,13) if scale_bin[-i] == "1"]
+
+        return tune_freqs, interval, scale_list
+
+    def process_tuning_key(self):
+
+        if len(self.key_var.get())!=7: return -1
+
+        (tune_freqs, interval, scale_list) = self.get_scale()
+
+        self.tune_freqs_var.set(tune_freqs)
+        self.interval_var.set(interval)
+        self.selector_radios_frame.radios[1].invoke()
+
+        for i,n in enumerate(self.note_vars):
             n.set(i+1 in scale_list)
 
-    def limitIntervalLen(*args):
-        interval_in = intervalVar.get()
-        if len(interval_in)>2 or (len(interval_in) >0 and not interval_in[-1].isdigit()):
-            intervalVar.set(interval_in[:-1])
+    def limit_interval_len(self, *args):
+        interval_in = self.interval_var.get()
+        if len(interval_in)>2 or (len(interval_in)>0 and not interval_in[-1].isdigit()):
+            self.interval_var.set(interval_in[:-1])
 
-    intervalVar.trace('w',limitIntervalLen)
+    def disable_scale_tuning(self):
+        self.scale_combobox.configure(state="disabled")
+        self.adv_scale_checkbox.configure(state="disabled")
 
-    def disableScaleTuning():
-        scaleCombobox.configure(state="disabled")
-        advScaleCheckbox.configure(state="disabled")
+    def disable_note_tuning(self):
+        for note_checkbox in self.note_buttons:
+            note_checkbox.configure(state="disabled")
 
-    def disableNoteTuning():
-        for noteCheckbox in noteButtons:
-            noteCheckbox.configure(state="disabled")
+    def enable_scale_tuning(self):
+        self.scale_combobox.configure(state="readonly")
+        self.adv_scale_checkbox.configure(state="normal")
 
-    def enableScaleTuning():
-        scaleCombobox.configure(state="readonly")
-        advScaleCheckbox.configure(state="normal")
+    def enable_note_tuning(self):
+        for note_checkbox in self.note_buttons:
+            note_checkbox.configure(state="normal")
 
-    def enableNoteTuning():
-        for noteCheckbox in noteButtons:
-            noteCheckbox.configure(state="normal")
-
-    def showsel(v: IntVar):
+    def showsel(self, v: IntVar):
 
         if v.get():
-            disableScaleTuning()
-            enableNoteTuning()
+            self.disable_scale_tuning()
+            self.enable_note_tuning()
         else:
-            disableNoteTuning()
-            enableScaleTuning()
+            self.disable_note_tuning()
+            self.enable_scale_tuning()
 
-    def getFile():
-        if fileTypeVar.get():
+    def get_file(self):
+        if self.file_type_var.get():
             file = filedialog.askdirectory(
                 title="Select Parent Directory of Files to Tune: "
             )
-            if file!="": fileName.configure(text=f"Directory: {file[file.rfind('/')+1:]}")
+            if file!="":
+                self.file_name.configure(text=f"Directory: {file[file.rfind('/')+1:]}")
         else:
             file = filedialog.askopenfilename(
                 title="Select File to Tune",
                 filetypes=[("SWX Files","*.swx")]
                 )
-            if file != "": fileName.configure(text=f'File: {file[file.rfind("/")+1:]}')
+            if file != "":
+                self.file_name.configure(text=f'File: {file[file.rfind("/")+1:]}')
 
-        fileVar.set(file)
+        self.file_var.set(file)
 
-    def changeFileType(v: IntVar):
+    def change_file_type(self, v: IntVar):
         if v.get():
-            fileLabel.configure(text="Set Path to Tune: ")
-            fileVar.set(""); fileName.configure(text="")
+            self.file_label.configure(text="Set Path to Tune: ")
+            self.file_var.set("")
+            self.file_name.configure(text="")
         else:
-            fileLabel.configure(text="Set File to Tune: ")
-            fileVar.set(""); fileName.configure(text="")
+            self.file_label.configure(text="Set File to Tune: ")
+            self.file_var.set("")
+            self.file_name.configure(text="")
 
-    def changeScalesShown():
-        showAdditional = showScalesVar.get()
-        if showAdditional: scaleCombobox.config(values=cb_values_ext)
+    def change_scales_shown(self):
+        show_additional = self.show_scales_var.get()
+        if show_additional:
+            self.scale_combobox.config(values=self.cb_values_ext)
         else:
-            scaleCombobox.config(values=cb_values)
-            if scaleVar.get() not in cb_values: scaleVar.set("C Major Scale")
+            self.scale_combobox.config(values=self.cb_values)
+            if self.scale_var.get() not in self.cb_values:
+                self.scale_var.set("C Major Scale")
 
-    def changeTuneFreqs():
-        tuneFreqs = tuneFreqsVar.get()
-        if tuneFreqs: 
-            selectorRadiosFrame.enable()
-            if tuneTypeVar.get(): enableNoteTuning()
-            else: enableScaleTuning()
+    def change_tune_freqs(self):
+        tune_freqs = self.tune_freqs_var.get()
+        if tune_freqs: 
+            self.selector_radios_frame.enable()
+            if self.tune_type_var.get():
+                self.enable_note_tuning()
+            else:
+                self.enable_scale_tuning()
         else:
-            selectorRadiosFrame.disable()
-            disableNoteTuning(); disableScaleTuning()
+            self.selector_radios_frame.disable()
+            self.disable_note_tuning()
+            self.disable_scale_tuning()
 
-    def tuneWithData():
-        filepath = fileVar.get()
-        interval = int(intervalVar.get())
-        tune_freqs = tuneFreqsVar.get()
-
-        tuneType = tuneTypeVar.get()        # 0: scale, 1: notes
-        if tuneType == 0:
-            scale_note, scale_type = scaleVar.get().split(' ',maxsplit=1)
-            scale = construct_default_scale(notes.index(scale_note)+1, scale_type)
+    def get_scale_vals(self):
+        tune_type = self.tune_type_var.get()        # 0: scale, 1: notes
+        if tune_type == 0:
+            scale_note, scale_type = self.scale_var.get().split(' ',maxsplit=1)
+            return construct_default_scale(notes.index(scale_note)+1, scale_type)
         else:
-            scale = [i+1 for i in range(len(noteButtons)) if noteVars[i].get()]
+            return [
+                i+1 for i in range(12)
+                if self.note_vars[i].get()
+            ]
+
+    def make_scale(self):
+        tune_freqs = self.tune_freqs_var.get()
+        interval = self.interval_var.get()
+
+        scale = self.get_scale_vals()
+        keys = "".join("1"  if k in scale else "0" for k in range(12,0,-1))
+        scale_hex = hex(int(keys, base=2))[2:].upper()
+
+        new_key = f"{tune_freqs}{interval}-{scale_hex}"
+        self.key_var.set(new_key)
+
+    def tune_with_data(self):
+        filepath = self.file_var.get()
+        interval = int(self.interval_var.get())
+        tune_freqs = self.tune_freqs_var.get()
+        scale = self.get_scale_vals()
 
         can_proceed = (filepath and interval and (scale or not tune_freqs))
         if can_proceed:
-            if fileTypeVar.get() == 0:   # 1: dir, 0: file
+            if self.file_type_var.get() == 0:   # 1: dir, 0: file
                 outfilepath = tune_cols(filepath, interval, scale, bool(tune_freqs))
                 run(['open', outfilepath], capture_output=True)
             else:
-                filesInDir = [n for n in str(run(['ls',filepath],capture_output=True).stdout)[2:].split('\\n') if n.endswith('.swx')]
-                for f in filesInDir: tune_cols(f"{filepath}/{f}", interval, scale, bool(tune_freqs))
+                files_in_dir = run(['ls',filepath],capture_output=True).stdout.decode("utf-8")
+                files_in_dir = filter(lambda n:n.endswith(".swx"), files_in_dir.splitlines())
+                for f in files_in_dir:
+                    tune_cols(f"{filepath}/{f}", interval, scale, bool(tune_freqs))
                 run(['open', filepath], capture_output=True)
 
-    optionsFrame = Frame(root, borderwidth=10); optionsFrame.pack(side='left', anchor=N)
-    tuningFrame = Frame(root, pady=5); tuningFrame.pack(side='right', anchor=N)
+    def __init__(self):
+        super().__init__()
 
-    # File Input
-    fileFrame = Frame(optionsFrame, borderwidth=5)
-    fileFrame.pack(side='top', anchor=W)
+        self.title("CTSF's SWX Tuner")
+        self.geometry("470x330+50+50")
+        self.resizable(False, False)
 
-    fileRadioFrame = RadioFrame(fileFrame, options=['Single file', 'Directory'], label="Object to Tune:", orientation="h", onchange=changeFileType)
-    fileRadioFrame.configure(borderwidth=3); fileRadioFrame.pack(side='top', anchor=W); fileTypeVar = fileRadioFrame.variable
+        self.interval_var = StringVar()
+        self.interval_var.trace('w',self.limit_interval_len)
 
-    fileInputFrame = Frame(fileFrame); fileInputFrame.pack(side='top')
+        self.file_var = StringVar()
+        self.scale_var = StringVar(value="C Major Scale")
+        self.key_var = StringVar()
 
-    fileLabel = Label(fileInputFrame, text="Set File to Tune:")
-    fileLabel.pack(side='left', anchor=W)
+        self.tune_type_var = IntVar()
+        self.show_scales_var = IntVar()
+        self.note_vars = [IntVar() for _ in range(len(notes))]
+        self.tune_freqs_var = IntVar(value=1)
 
-    fileInput = Button(fileInputFrame, text="Browse...", command=getFile)
-    fileInput.pack(side='left', anchor=W)
+        self.cb_values = [f"{n} Major Scale" for n in notes]
+        self.cb_values_ext = [f"{notes[i]} {n}" for n in default_scales.keys() for i in range(len(notes))]
 
-    fileName = Label(fileFrame)
-    fileName.pack(side='top', anchor=W)
+        options_frame = Frame(self, borderwidth=10)
+        options_frame.pack(side='left', anchor=N)
+
+        tuning_frame = Frame(self, pady=5)
+        tuning_frame.pack(side='right', anchor=N)
+
+        # File Input
+        file_frame = Frame(options_frame, borderwidth=5)
+        file_frame.pack(side='top', anchor=W)
+
+        file_radio_frame = RadioFrame(
+            file_frame, options=['Single file', 'Directory'],
+            label="Object to Tune:", orientation="h",
+            onchange=self.change_file_type
+        )
+        file_radio_frame.configure(borderwidth=3)
+        file_radio_frame.pack(side='top', anchor=W)
+        self.file_type_var = file_radio_frame.variable
+
+        file_input_frame = Frame(file_frame)
+        file_input_frame.pack(side='top')
+
+        self.file_label = Label(file_input_frame, text="Set File to Tune:")
+        self.file_label.pack(side='left', anchor=W)
+
+        file_input = Button(
+            file_input_frame, text="Browse...", 
+            command=self.get_file
+        )
+        file_input.pack(side='left', anchor=W)
+
+        self.file_name = Label(file_frame)
+        self.file_name.pack(side='top', anchor=W)
 
 
-    # Interval Input
-    intervalFrame = Frame(optionsFrame, borderwidth=3)
-    intervalFrame.pack(side='top', anchor=W)
+        # Interval Input
+        interval_frame = Frame(options_frame, borderwidth=3)
+        interval_frame.pack(side='top', anchor=W)
 
-    intervalInputLabel = Label(intervalFrame, text="Tuning interval (x10ms): ")
-    intervalInputLabel.pack(side='left',anchor=W)
+        interval_input_label = Label(interval_frame, text="Tuning interval (x10ms): ")
+        interval_input_label.pack(side='left',anchor=W)
 
-    intervalInput = Entry(intervalFrame, width=2, textvariable=intervalVar)
-    intervalInput.pack(side='right',anchor=S)
+        interval_input = Entry(interval_frame, width=2, textvariable=self.interval_var)
+        interval_input.pack(side='right',anchor=S)
 
 
-    # Submit Button
-    submitButton = Button(optionsFrame, text="Tune File", command=tuneWithData, borderwidth=5)
-    submitButton.pack(side='bottom',anchor=W)
+        # Submit Button
+        submit_button = Button(
+            options_frame, text="Tune File",
+            command=self.tune_with_data, borderwidth=5
+        )
+        submit_button.pack(side='bottom',anchor=W)
 
-    # Selector Radios
-    selectorFrame = Frame(optionsFrame, borderwidth=3)
-    selectorFrame.pack(side='top', anchor=W)
 
-    tuneFreqsCheckbox = Checkbutton(selectorFrame, text="Tune Frequencies", variable=tuneFreqsVar, onvalue=1, offvalue=0, command=changeTuneFreqs)
-    tuneFreqsCheckbox.pack(anchor=W, side='top')
+        # Selector Radios
+        selector_frame = Frame(options_frame, borderwidth=3)
+        selector_frame.pack(side='top', anchor=W)
 
-    selectorRadiosFrame = RadioFrame(selectorFrame, options=["Scale", "Notes"], label="Tune File By:", onchange=showsel)
-    tuneTypeVar = selectorRadiosFrame.variable; selectorRadiosFrame.pack(side="top", anchor=W)
+        tune_freqs_checkbox = Checkbutton(
+            selector_frame, text="Tune Frequencies",
+            variable=self.tune_freqs_var, onvalue=1, offvalue=0,
+            command=self.change_tune_freqs
+        )
+        tune_freqs_checkbox.pack(anchor=W, side='top')
 
-    # Scale radio combobox
-    scaleRadioFrame = Frame(tuningFrame, borderwidth=10)
-    scaleRadioFrame.pack(anchor=N)
+        self.selector_radios_frame = RadioFrame(
+            selector_frame, options=["Scale", "Notes"],
+            label="Tune File By:", onchange=self.showsel
+        )
+        self.tune_type_var = self.selector_radios_frame.variable
+        self.selector_radios_frame.pack(side="top", anchor=W)
 
-    scaleRadioLabel = Label(scaleRadioFrame, text="Select scale to tune to: ")
-    scaleRadioLabel.pack(anchor=W)
 
-    scaleCombobox = ttk.Combobox(scaleRadioFrame, textvariable = scaleVar, values=cb_values, state = "readonly")
-    scaleCombobox.pack(anchor=W)
+        # Scale radio combobox
+        scale_radio_frame = Frame(tuning_frame, borderwidth=10)
+        scale_radio_frame.pack(anchor=N)
 
-    advScaleCheckbox = Checkbutton(scaleRadioFrame, command=changeScalesShown, text="Show additional scales",onvalue=1,offvalue=0, variable=showScalesVar)
-    advScaleCheckbox.pack(anchor=W)
+        scaleRadioLabel = Label(scale_radio_frame, text="Select scale to tune to: ")
+        scaleRadioLabel.pack(anchor=W)
 
-    # Note checkbuttons
-    noteButtonsFrame = Frame(tuningFrame, padx=10); noteButtonsFrame.pack(anchor=SW)
-    bottomNotesFrame=Frame(noteButtonsFrame); bottomNotesFrame.pack(side='bottom')
+        self.scale_combobox = ttk.Combobox(
+            scale_radio_frame, textvariable = self.scale_var,
+            values=self.cb_values, state = "readonly"
+        )
+        self.scale_combobox.pack(anchor=W)
 
-    leftSideFrame = Frame(bottomNotesFrame, borderwidth=3, padx=10); leftSideFrame.pack(side='left', anchor=W)
-    rightSideFrame = Frame(bottomNotesFrame, borderwidth=3,padx=10); rightSideFrame.pack(side='right', anchor=W)
+        self.adv_scale_checkbox = Checkbutton(
+            scale_radio_frame, command=self.change_scales_shown,
+            text="Show additional scales", onvalue=1,offvalue=0,
+            variable=self.show_scales_var
+        )
+        self.adv_scale_checkbox.pack(anchor=W)
 
-    noteButtonsLabel = Label(noteButtonsFrame, text="Select note(s) to tune to: ")
-    noteButtonsLabel.pack(anchor=N)
 
-    noteButtons = [Checkbutton([leftSideFrame,rightSideFrame][i>5], text=n, variable=noteVars[i], onvalue=1, offvalue=0, state="disabled") for i,n in enumerate(notes)]
-    for n in noteButtons: n.pack(anchor=W)
+        # Note checkbuttons
+        note_buttons_frame = Frame(tuning_frame, padx=10)
+        note_buttons_frame.pack(anchor=SW)
 
-    # Tuning key Frame
-    keyVar.trace('w', validateKey)
+        bottom_notes_frame=Frame(note_buttons_frame)
+        bottom_notes_frame.pack(side='bottom')
 
-    keyFrame = Frame(tuningFrame, borderwidth=3)
-    keyFrame.pack(side='top', anchor=W)
+        notes_leftcol_frame = Frame(bottom_notes_frame, borderwidth=3, padx=10)
+        notes_leftcol_frame.pack(side='left', anchor=W)
 
-    keyInputLabel = Label(keyFrame, text="(beta) Tune with key:")
-    keyInputLabel.pack(side='left')
-    keyInput = Entry(keyFrame,width=7,textvariable=keyVar)
-    keyInput.pack(side='left')
+        notes_rightcol_frame = Frame(bottom_notes_frame, borderwidth=3,padx=10)
+        notes_rightcol_frame.pack(side='right', anchor=W)
 
-    showKeyButton = Button(tuningFrame, text="Set Key", command=processTuningKey)
-    showKeyButton.pack(side='top', anchor=W)
+        note_buttons_label = Label(note_buttons_frame, text="Select note(s) to tune to: ")
+        note_buttons_label.pack(anchor=N)
 
-    root.mainloop()
+        self.note_buttons = [
+            Checkbutton(
+                master=(notes_leftcol_frame if i<6 else notes_rightcol_frame),
+                text=n, variable=self.note_vars[i], onvalue=1, offvalue=0,
+                state="disabled"
+            ) for i,n in enumerate(notes)
+        ]
+        for n in self.note_buttons:
+            n.pack(anchor=W)
 
-if __name__ == "__main__": main()
+        # Tuning key Frame
+        self.key_var.trace('w', self.validate_key)
+
+        key_frame = Frame(tuning_frame, borderwidth=3)
+        key_frame.pack(side='top', anchor=W)
+
+        key_input_label = Label(key_frame, text="(beta) Tune with key:")
+        key_input_label.pack(side='left')
+
+        key_input = Entry(key_frame,width=7,textvariable=self.key_var)
+        key_input.pack(side='left')
+
+        key_buttons_frame = Frame(tuning_frame)
+        key_buttons_frame.pack(side="top", anchor=W)
+
+        show_key_button = Button(
+            key_buttons_frame, text="Set Key",
+            command=self.process_tuning_key
+        )
+        show_key_button.pack(side='left')
+
+        get_key_button = Button(
+            key_buttons_frame, text="Get Key",
+            command=self.make_scale
+        )
+        get_key_button.pack(side="right")
+
+def main():
+    app = TunerApp()
+    app.mainloop()
+
+if __name__ == "__main__":
+    main()

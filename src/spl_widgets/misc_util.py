@@ -1,5 +1,8 @@
 from math import log
 
+# for use in stk_swx and tune_freq
+class MalformedFileError(Exception): pass
+
 # Stores notes of the chromatic scale for referencing
 notes=['A','A#','B','C','C#','D','D#','E','F','F#','G','G#']
 
