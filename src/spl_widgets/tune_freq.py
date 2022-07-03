@@ -13,7 +13,7 @@ bad_file_str = dedent("""
     and provide a copy of the file and its .stk equivalent (if possible)."""
 )
 
-def tune_cols(filepath: str, interval: int, scale, tune_freqs):
+def tune_cols(filepath: str, interval: int, scale: list[int], tune_freqs: bool):
 
     try:
         df = pd.read_csv(

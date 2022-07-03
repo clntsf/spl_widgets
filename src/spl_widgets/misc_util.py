@@ -40,3 +40,14 @@ def get_closest(pool: list, target: float) -> float:
 # Get all valid note frequencies given a scale of notes
 def construct_note_freqs(scale: "list[int]") -> "list[float]":
     return [to_freq((12*i)+j) for i in range(8) for j in scale if 12*i+j<=88]
+
+def get_scale(key: str):
+
+    tune_freqs = int(key[0])
+    interval = int(key[1:3])
+
+    scale_bin = bin(int(key[-3:],base=16))[2:]
+    scale_bin = scale_bin.zfill(12)
+    scale_list = [i for i in range(1,13) if scale_bin[-i] == "1"]
+
+    return tune_freqs, interval, scale_list

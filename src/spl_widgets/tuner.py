@@ -47,24 +47,15 @@ class TunerApp(Tk):
             new_key = key[:-1]
         self.key_var.set(new_key.upper())
 
-    def get_scale(self):
-
+    def get_key(self):
         key = self.key_var.get()
-
-        tune_freqs = int(key[0])
-        interval = int(key[1:3])
-
-        scale_bin = bin(int(key[-3:],base=16))[2:]
-        scale_bin = scale_bin.zfill(12)
-        scale_list = [i for i in range(1,13) if scale_bin[-i] == "1"]
-
-        return tune_freqs, interval, scale_list
+        return get_scale(key)
 
     def process_tuning_key(self):
 
         if len(self.key_var.get())!=7: return -1
 
-        (tune_freqs, interval, scale_list) = self.get_scale()
+        (tune_freqs, interval, scale_list) = self.get_key()
 
         self.tune_freqs_var.set(tune_freqs)
         self.interval_var.set(interval)
