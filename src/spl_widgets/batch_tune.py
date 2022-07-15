@@ -64,9 +64,9 @@ def main():
         raise ValueError(f"[Error] invalid filepath to .swx file: {swx_fp}")
 
     try:                                                    # get text from params file
-        with open(params_fp, "r") as reader:
-            text = reader.read()
-    except FileNotFoundError:                               # bad params filepath, bail
+        text = Path(params_fp).read_text()
+    except Exception:                               # bad params filepath, bail
+        print(Exception.args)
         raise ValueError(f"Invalid path to parameter file: {params_fp}")
 
     keys = re.findall(KEY_REGEX, text, re.MULTILINE)        # get keys from params file text
@@ -75,6 +75,7 @@ def main():
     for k in keys:      # tune with each key
         try:                                                # get tuning params from key
             tune_freqs, interval, scale_list = get_scale(k)
+            tune_freqs = bool(tune_freqs)
             successful = True
         except Exception:                                   # bad key, skip tune
             print(f"[Warning]: Invalid tuning key: {k}")

@@ -3,6 +3,7 @@ from io import StringIO
 from tkinter import filedialog
 from argparse import ArgumentParser
 from subprocess import run
+from pathlib import Path
 from spl_widgets.misc_util import MalformedFileError
 
 def parse_df(df: pd.DataFrame) -> "tuple[int, pd.DataFrame]":   # Returns the desired columns (active formant freq and amp) from an inputted pd.DataFrame
@@ -52,7 +53,7 @@ def stk_to_swx(filepath):
 	df.to_csv(f"{out_fp}.tsv", index=False, sep='\t')
 	run(["mv", f"{out_fp}.tsv", f"{out_fp}.swx"], capture_output=False)
 
-	return out_fp
+	return f"{out_fp}.swx"
 
 def make_parser():
 	parser = ArgumentParser(prog="stk_swx")
@@ -77,11 +78,10 @@ def main():
 			print(USER_BAIL_MSG)
 			return False
 
-		files_in_dir = str(run(["ls", filepath], capture_output=True).stdout)[2:-1].split('\\n')[:-1]		# gets and parses terminal ls output into list of files in directory
-		operable_files = [file for file in files_in_dir if file.endswith(".stk")]							# gets files with .stk extension
+		operable_files = map(str, Path(filepath).glob("*.stk"))		# gets and parses terminal ls output into list of files in directory							# gets files with .stk extension
 
 		for file in operable_files:
-			stk_to_swx(f'{filepath}/{file}')
+			stk_to_swx(file)
 			print(f"File {file} has been converted")
 
 		print("\nCompatible files have been successfully converted")
@@ -92,12 +92,12 @@ def main():
 			print(USER_BAIL_MSG)
 			return False
 
-		out_fp = stk_to_swx(filepath) + ".swx"
+		out_fp = stk_to_swx(filepath)
 		print('\n'+f"File written to {out_fp}")
 
 	# --- Display completion message, open .swx file/dir if user chooses --- #
 	if input("Open Output? (y/n): ").lower() == 'y':
-		run(["open", out_fp], capture_output=False)
+		run(["open", out_fp])
 
 if __name__ == "__main__":
 	main()

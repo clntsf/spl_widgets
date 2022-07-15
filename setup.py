@@ -5,7 +5,7 @@ import setuptools
 
 setuptools.setup(
     name="spl_widgets",
-    version="0.6.0",
+    version="0.6.2",
     author="Colin Simon-Fellowes",
     author_email="colin.tsf@gmail.com",
     description="Widgets for the Barnard Speech Perception Laboratory",
@@ -23,7 +23,7 @@ setuptools.setup(
     package_dir={"": "src"},
     packages=setuptools.find_packages(where="src"),
     install_requires=['pandas'],
-    python_requires=">=3.10",
+    python_requires=">=3.8",
     entry_points='''
         [console_scripts]
         lighttheme=spl_widgets:lighttheme_force

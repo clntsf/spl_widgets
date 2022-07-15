@@ -3,6 +3,7 @@ from tkinter import filedialog, ttk
 from spl_widgets.misc_util import *
 from spl_widgets.tune_freq import tune_cols
 from subprocess import run
+from pathlib import Path
 
 class RadioFrame(Frame):
 
@@ -177,10 +178,9 @@ class TunerApp(Tk):
                 outfilepath = tune_cols(filepath, interval, scale, bool(tune_freqs))
                 run(['open', outfilepath], capture_output=True)
             else:
-                files_in_dir = run(['ls',filepath],capture_output=True).stdout.decode("utf-8")
-                files_in_dir = filter(lambda n:n.endswith(".swx"), files_in_dir.splitlines())
+                files_in_dir = Path(filepath).glob("*.swx")
                 for f in files_in_dir:
-                    tune_cols(f"{filepath}/{f}", interval, scale, bool(tune_freqs))
+                    tune_cols(str(f), interval, scale, bool(tune_freqs))
                 run(['open', filepath], capture_output=True)
 
     def __init__(self):
