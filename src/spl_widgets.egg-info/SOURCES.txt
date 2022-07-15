@@ -7,6 +7,7 @@ src/spl_widgets/__main__.py
 src/spl_widgets/batch_tune.py
 src/spl_widgets/clear_aliases.py
 src/spl_widgets/gorilla_clean.py
+src/spl_widgets/jukemake.py
 src/spl_widgets/misc_util.py
 src/spl_widgets/stk_swx.py
 src/spl_widgets/tune_freq.py
