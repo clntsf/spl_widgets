@@ -51,3 +51,10 @@ def get_scale(key: str):
     scale_list = [i for i in range(1,13) if scale_bin[-i] == "1"]
 
     return tune_freqs, interval, scale_list
+
+# formats a pd.DataFrame to tsv (returns a string to be written to file)
+def df_to_tsv(df) -> str:
+    rows = ["\t".join(map(str, df.columns))]
+    for i in df.index:
+        rows.append("\t".join(map(str, df.iloc[i])))
+    return "\n".join(rows)
