@@ -4,6 +4,14 @@ from pathlib import Path
 from random import shuffle
 from subprocess import run
 
+# shell class to represent the values of the Namespace returned by our argparser
+# purely for transparency and convenience
+class ParserArgs:
+    silence: int
+    rep_silence: int
+    num_rpt: int
+    end_silence: int
+
 def make_parser():
     parser = ArgumentParser(
         prog="jukemake",
@@ -42,7 +50,7 @@ def format_to_file(files: list[str], pauses: list[int], outfp: str|Path):
 def main():
 
     parser = make_parser()
-    args = parser.parse_args()
+    args: ParserArgs = parser.parse_args()
 
     files_dir = filedialog.askdirectory( title="Directory with .wav files" )
     files = get_wav_in_dir(Path(files_dir))

@@ -64,8 +64,10 @@ def tune_cols(filepath: str, interval: int, scale: list[int], tune_freqs: bool):
     out_dir_filepath = filepath[:filepath.rfind('/')]+f'/tuning_done_{now_str}'
     run(['mkdir', out_dir_filepath], capture_output=True)
 
-    out_df.to_csv(f'{out_dir_filepath}/{filename}_tuned.tsv', index=False, sep='\t')
-    run(['mv', f'{out_dir_filepath}/{filename}_tuned.tsv', f'{out_dir_filepath}/{filename}_tuned.swx'], capture_output=True)
+    # convert df to tab-separated format and write to .swx file
+    tsv = df_to_tsv(df)
+    with open(f"{out_dir_filepath}/{filename}_tuned.swx", "w") as writer:
+        writer.write(tsv)
 
     # Creates params.txt file
     notes_tuning = hex(sum([2**i*(i+1 in scale) for i in range(12)]))[2:]
@@ -82,5 +84,5 @@ def tune_cols(filepath: str, interval: int, scale: list[int], tune_freqs: bool):
     
     with open(f'{out_dir_filepath}/params.txt','w') as writer:
         writer.write('\n'.join(args))
-        
+    
     return out_dir_filepath
