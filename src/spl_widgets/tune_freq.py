@@ -65,7 +65,7 @@ def tune_cols(filepath: str, interval: int, scale: list[int], tune_freqs: bool):
     run(['mkdir', out_dir_filepath], capture_output=True)
 
     # convert df to tab-separated format and write to .swx file
-    tsv = df_to_tsv(df)
+    tsv = df_to_tsv(out_df)
     with open(f"{out_dir_filepath}/{filename}_tuned.swx", "w") as writer:
         writer.write(tsv)
 

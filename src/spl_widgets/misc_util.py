@@ -41,7 +41,7 @@ def get_closest(pool: list, target: float) -> float:
 def construct_note_freqs(scale: "list[int]") -> "list[float]":
     return [to_freq((12*i)+j) for i in range(8) for j in scale if 12*i+j<=88]
 
-def get_scale(key: str):
+def get_scale(key: str) -> tuple[int, int, list[int], list[int]]:
 
     tune_freqs = int(key[0])
     interval = int(key[1:3])
