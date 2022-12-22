@@ -7,10 +7,10 @@ from pathlib import Path
 
 class RadioFrame(Frame):
 
-    def __init__(self, master: Frame, options: "list[str]", label: str, onchange: "function", orientation="v") -> Frame:
-        Frame.__init__(self, master)
+    def __init__(self, parent: Frame, options: "list[str]", label: str, onchange: "function", orientation="v") -> Frame:
+        Frame.__init__(self, parent)
 
-        self.parent = master
+        self.parent = parent
         self.variable = IntVar()
         self.onchange = lambda: onchange(self.variable) if onchange else None
 
@@ -33,16 +33,32 @@ class RadioFrame(Frame):
 
 class TunerApp(Tk):
 
+    cb_values = [f"{n} Major Scale" for n in notes]
+    cb_values_ext = [f"{notes[i]} {n}" for n in default_scales.keys() for i in range(len(notes))]
+
+    fmts_to_tune: list[int] = None
+
+    # KEY FORMAT:
+    # b - bit, d - digit, x - hex digit
+    # All formants tuned -> bdd-xxx
+    # Specific formants tuned -> bdd-xxx-xx
+
     def validate_key(self, *args):
         key = self.key_var.get()
         new_key = key
 
-        invalid_key = (
-            len(key) > 7 or
-            (4<len(key)<7 and not (key[-1].isdigit() or key[-1].lower() in 'abcdef')) or
-            (len(key) == 4 and key[-1] != "-") or
-            1<len(key)<4 and not key[-1].isdigit() or
-            (len(key)==1 and key[0] not in '01'))
+        def is_hexadecimal(char: str):
+            return (char.isdigit()) or (char.lower() in 'abcdef')
+
+        invalid_key = any([
+            len(key) > 10,
+            (9<=len(key)<=10) and not ( is_hexadecimal(key[-1]) ),
+            (len(key)==8)     and ( key[-1] != "-" ),
+            (5<=len(key)<=7)  and not ( is_hexadecimal(key[-1]) ),
+            (len(key) == 4)   and ( key[-1] != "-" ),
+            (2<=len(key)<=3)  and not ( key[-1].isdigit() ),
+            (len(key)==1)     and not ( key[0] in '01' )
+        ])
 
         if invalid_key:
             new_key = key[:-1]
@@ -54,13 +70,15 @@ class TunerApp(Tk):
 
     def process_tuning_key(self):
 
-        if len(self.key_var.get())!=7: return -1
-
-        (tune_freqs, interval, scale_list) = self.get_key()
+        if len(self.key_var.get())<7: return -1
+        
+        (tune_freqs, interval, scale_list, fmts_to_tune) = self.get_key()
 
         self.tune_freqs_var.set(tune_freqs)
         self.interval_var.set(interval)
-        self.selector_radios_frame.radios[1].invoke()
+        self.fmts_to_tune = fmts_to_tune
+
+        self.selector_radios_frame.radios[1].invoke()       # force switch tuning mode to notes
 
         for i,n in enumerate(self.note_vars):
             n.set(i+1 in scale_list)
@@ -175,12 +193,12 @@ class TunerApp(Tk):
         can_proceed = (filepath and interval and (scale or not tune_freqs))
         if can_proceed:
             if self.file_type_var.get() == 0:   # 1: dir, 0: file
-                outfilepath = tune_cols(filepath, interval, scale, bool(tune_freqs))
+                outfilepath = tune_cols(filepath, interval, scale, bool(tune_freqs), self.fmts_to_tune)
                 run(['open', outfilepath], capture_output=True)
             else:
                 files_in_dir = Path(filepath).glob("*.swx")
                 for f in files_in_dir:
-                    tune_cols(str(f), interval, scale, bool(tune_freqs))
+                    tune_cols(str(f), interval, scale, bool(tune_freqs), self.fmts_to_tune)
                 run(['open', filepath], capture_output=True)
 
     def __init__(self):
@@ -202,14 +220,12 @@ class TunerApp(Tk):
         self.note_vars = [IntVar() for _ in range(len(notes))]
         self.tune_freqs_var = IntVar(value=1)
 
-        self.cb_values = [f"{n} Major Scale" for n in notes]
-        self.cb_values_ext = [f"{notes[i]} {n}" for n in default_scales.keys() for i in range(len(notes))]
-
         options_frame = Frame(self, borderwidth=10)
         options_frame.pack(side='left', anchor=N)
 
         tuning_frame = Frame(self, pady=5)
         tuning_frame.pack(side='right', anchor=N)
+
 
         # File Input
         file_frame = Frame(options_frame, borderwidth=5)
@@ -324,6 +340,7 @@ class TunerApp(Tk):
         ]
         for n in self.note_buttons:
             n.pack(anchor=W)
+
 
         # Tuning key Frame
         self.key_var.trace('w', self.validate_key)

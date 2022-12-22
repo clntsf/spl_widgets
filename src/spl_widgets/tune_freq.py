@@ -3,8 +3,9 @@ import numpy as np
 from io import StringIO
 from subprocess import run
 from datetime import datetime
-from spl_widgets.misc_util import *
 from textwrap import dedent
+
+from spl_widgets.misc_util import *
 
 bad_file_str = dedent("""
     File structure of {} is malformed and cannot be read by tune_freq
@@ -13,7 +14,13 @@ bad_file_str = dedent("""
     and provide a copy of the file and its .stk equivalent (if possible)."""
 )
 
-def tune_cols(filepath: str, interval: int, scale: list[int], tune_freqs: bool):
+def tune_cols(
+    filepath: str,
+    interval: int,
+    scale: list[int],
+    tune_freqs: bool,
+    fmts_to_tune: list[int]|None
+    ) -> str:
 
     try:
         df = pd.read_csv(
@@ -27,13 +34,23 @@ def tune_cols(filepath: str, interval: int, scale: list[int], tune_freqs: bool):
     size = df.shape[0]
     out_df = pd.DataFrame(df.iloc[:,0])
 
-    scale_notes = construct_note_freqs(scale)
-    for fmt in range(formants):
-        amp_col = df.iloc[:,2*fmt+2]
+    if fmts_to_tune == None:
+        fmts_to_tune = [*range(1,formants+1)]
 
-        freq_col = df.iloc[:,2*fmt+1]
+    fmts_to_tune = [*filter(lambda n: n<=formants, fmts_to_tune)]
+
+    scale_notes = construct_note_freqs(scale)
+    for fmt in range(1,formants+1):
+
+        amp_col = df.iloc[:,2*fmt]
+        freq_col = df.iloc[:,2*fmt-1]
         freq_col = np.where(amp_col>0, freq_col, 0)
         new_col =[]
+ 
+        if not (fmt in fmts_to_tune):
+            out_df[f'F{fmt}']=freq_col
+            out_df[f'A{fmt}']=amp_col
+            continue
  
         for slice_start in range(0, size, interval):
 
@@ -41,7 +58,11 @@ def tune_cols(filepath: str, interval: int, scale: list[int], tune_freqs: bool):
             freq_slice = freq_col[slice_start:slice_end]
 
             nz_amps = np.count_nonzero(amp_col[slice_start:slice_end])
-            range_freq = sum(freq_slice) / max(1, nz_amps)
+            if nz_amps == 0:
+                new_col += [0]*len(freq_slice)
+                continue
+
+            range_freq = sum(freq_slice) / nz_amps
 
             if tune_freqs is True and range_freq != 0:
                 range_freq = get_closest(scale_notes, range_freq)
@@ -50,6 +71,9 @@ def tune_cols(filepath: str, interval: int, scale: list[int], tune_freqs: bool):
 
         for i, cell in enumerate(new_col):
             if cell == 0:
+                if max(amp_col[max(0,i-1):i+2]) == 0:
+                    continue
+
                 new_col[i] = max(new_col[max(0,i-1):i+2])
         
         out_df[f'F{fmt}']=new_col
@@ -63,15 +87,17 @@ def tune_cols(filepath: str, interval: int, scale: list[int], tune_freqs: bool):
 
     out_dir_filepath = filepath[:filepath.rfind('/')]+f'/tuning_done_{now_str}'
     run(['mkdir', out_dir_filepath], capture_output=True)
-
+    
     # convert df to tab-separated format and write to .swx file
     tsv = df_to_tsv(out_df)
     with open(f"{out_dir_filepath}/{filename}_tuned.swx", "w") as writer:
         writer.write(tsv)
 
     # Creates params.txt file
-    notes_tuning = hex(sum([2**i*(i+1 in scale) for i in range(12)]))[2:]
-    tuning_key = f"{int(tune_freqs)}{str(interval).zfill(2)}-{notes_tuning}"
+    notes_tuning = hex(sum( [2**(i-1) for i in scale] ))[2:]
+    fmts_tuned = hex(sum( 2**(i-1) for i in fmts_to_tune ))[2:].zfill(2)
+
+    tuning_key = f"{ int(tune_freqs) }{ str(interval).zfill(2) }-{notes_tuning}-{fmts_tuned}"
 
     args=[
         'Tuning Parameters:',
@@ -79,6 +105,7 @@ def tune_cols(filepath: str, interval: int, scale: list[int], tune_freqs: bool):
         f'Interval: {10*interval}ms (setting: {interval})',
         f'Scale: {num_scale_to_strs(scale) if tune_freqs else "NOT TUNED"}',
         f"Tune Frequencies: {tune_freqs}",
+        f"Formants Tuned: {fmts_to_tune}",
         f'Tuning Key: {tuning_key}'
         ]
     
