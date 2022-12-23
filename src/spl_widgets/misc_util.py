@@ -46,11 +46,17 @@ def get_scale(key: str) -> tuple[int, int, list[int], list[int]]:
     tune_freqs = int(key[0])
     interval = int(key[1:3])
 
-    scale_bin = bin(int(key[-3:],base=16))[2:]
+    scale_bin = bin(int(key[4:7],base=16))[2:]
     scale_bin = scale_bin.zfill(12)
     scale_list = [i for i in range(1,13) if scale_bin[-i] == "1"]
 
-    return tune_freqs, interval, scale_list
+    fmts_to_tune = None
+    if len(key) > 8:
+        bits = bin(int(key[8:], base=16))[2:]
+        fmts_to_tune = [*map(int,bits[::-1])]
+        fmts_to_tune = [n+1 for n in range(len(bits)) if fmts_to_tune[n]]
+
+    return tune_freqs, interval, scale_list, fmts_to_tune
 
 # formats a pd.DataFrame to tsv (returns a string to be written to file)
 def df_to_tsv(df) -> str:
