@@ -44,13 +44,14 @@ def tune_cols(
 
         amp_col = df.iloc[:,2*fmt]
         freq_col = df.iloc[:,2*fmt-1]
-        freq_col = np.where(amp_col>0, freq_col, 0)
-        new_col =[]
  
         if not (fmt in fmts_to_tune):
             out_df[f'F{fmt}']=freq_col
             out_df[f'A{fmt}']=amp_col
             continue
+
+        freq_col = np.where(amp_col>0, freq_col, 0)
+        new_col =[]
  
         for slice_start in range(0, size, interval):
 
@@ -59,7 +60,7 @@ def tune_cols(
 
             nz_amps = np.count_nonzero(amp_col[slice_start:slice_end])
             if nz_amps == 0:
-                new_col += [0]*len(freq_slice)
+                new_col.extend(freq_slice)
                 continue
 
             range_freq = sum(freq_slice) / nz_amps
@@ -94,8 +95,8 @@ def tune_cols(
         writer.write(tsv)
 
     # Creates params.txt file
-    notes_tuning = hex(sum( [2**(i-1) for i in scale] ))[2:]
-    fmts_tuned = hex(sum( 2**(i-1) for i in fmts_to_tune ))[2:].zfill(2)
+    notes_tuning = encode_num_list_as_hex(scale).zfill(3)
+    fmts_tuned = encode_num_list_as_hex(fmts_to_tune).zfill(2)
 
     tuning_key = f"{ int(tune_freqs) }{ str(interval).zfill(2) }-{notes_tuning}-{fmts_tuned}"
 

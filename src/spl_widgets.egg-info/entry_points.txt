@@ -2,7 +2,6 @@
 batch_tune = spl_widgets.batch_tune:main
 gorilla_clean = spl_widgets.gorilla_clean:main
 jukemake = spl_widgets.jukemake:main
-lighttheme = spl_widgets:lighttheme_force
 rm_aliases = spl_widgets.clear_aliases:main
 stk_swx = spl_widgets.stk_swx:main
 tuner = spl_widgets.tuner:main

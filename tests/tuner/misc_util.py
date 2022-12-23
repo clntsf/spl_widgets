@@ -43,9 +43,9 @@ def get_scale(key: str) -> tuple[int, int, list[int], list[int]]:
     tune_freqs = int(key[0])
     interval = int(key[1:3])
 
-    scale_bin = bin(int(key[4:7],base=16))[2:]
-    scale_bin = scale_bin.zfill(12)
-    scale_list = [i for i in range(1,13) if scale_bin[-i] == "1"]
+    scale_bin = bin(int(key[4:7],base=16))[:2:-1]
+    scale_list = [*map(int, )]
+    scale_list = [i+1 for i in range(len(scale_bin)) if scale_bin[i] == "1"]
 
     fmts_to_tune = None
     if len(key) > 8:
