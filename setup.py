@@ -11,10 +11,7 @@ setuptools.setup(
     description="Widgets for the Barnard Speech Perception Laboratory",
     # long_description=long_description,
     # long_description_content_type="text/markdown",
-    url="https://github.com/ctsf1/spl_widgets",
-    project_urls={
-        "Changelog":"https://github.com/ctsf1/spl_widgets#changelog"
-    },
+    url="https://github.com/clntsf/spl_widgets",
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
