@@ -374,16 +374,22 @@ class TunerApp(Tk):
 
 
         # Submit Button
-
-        submit_button = Button(
+        submit_frame = Frame(
             options_frame,
+            highlightbackground="black",
+            highlightthickness=1
+        )
+        submit_frame.pack(
+            side="left", anchor=CENTER, fill=BOTH, expand=TRUE,
+            padx=2, pady=2
+        )
+        submit_button = Button(
+            submit_frame,
             text="Tune File",
+            bg="black",
             command=self.tune_with_data,
         )
-        submit_button.pack(
-            side='left', anchor=CENTER, fill=BOTH,
-            expand=TRUE
-        )
+        submit_button.pack( fill=BOTH,expand=TRUE )
 
         ##### RIGHT SIDE FRAME #####
 

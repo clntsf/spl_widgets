@@ -26,7 +26,6 @@ setuptools.setup(
     python_requires=">=3.8",
     entry_points='''
         [console_scripts]
-        rm_aliases=spl_widgets.clear_aliases:main
         gorilla_clean=spl_widgets.gorilla_clean:main
         tuner=spl_widgets.tuner:main
         stk_swx=spl_widgets.stk_swx:main
