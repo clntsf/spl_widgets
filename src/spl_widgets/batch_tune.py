@@ -5,14 +5,14 @@ from sys import exit
 from tkinter import filedialog
 from subprocess import run
 import re
-from spl_widgets.misc_util import get_scale
+from spl_widgets.misc_util import get_tuning_info
 from spl_widgets.tune_freq import tune_cols
 
 KEY_REGEX = r"^([01][0-9]{2}-[0-9A-Fa-f]{3})$"
 
 def get_file(*args, **kwargs):
     params_file = filedialog.askopenfilename(*args, **kwargs)
-    if params_file is None:                                     # user bailed in filedialog
+    if params_file == "":                                       # user bailed in filedialog
         print("User bailed in filedialog")
         exit(1)
 
@@ -74,7 +74,7 @@ def main():
     successful=False    # whether the program has successfully done any tunings
     for k in keys:      # tune with each key
         try:                                                # get tuning params from key
-            tune_freqs, interval, scale_list = get_scale(k)
+            tune_freqs, interval, scale_list, _fmts_to_tune = get_tuning_info(k)
             tune_freqs = bool(tune_freqs)
             successful = True
         except Exception:                                   # bad key, skip tune
