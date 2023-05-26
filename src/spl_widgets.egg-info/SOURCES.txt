@@ -17,4 +17,10 @@ src/spl_widgets.egg-info/dependency_links.txt
 src/spl_widgets.egg-info/entry_points.txt
 src/spl_widgets.egg-info/requires.txt
 src/spl_widgets.egg-info/top_level.txt
+src/spl_widgets/autoscorer/autoscore.py
+src/spl_widgets/autoscorer/autoscorer_gui.py
+src/spl_widgets/autoscorer/tokenize_to_ipa.py
 src/spl_widgets/data/cmudict.sqlite
+src/spl_widgets/util/color_util.py
+src/spl_widgets/util/gui_util.py
+src/spl_widgets/util/sqlite_db.py

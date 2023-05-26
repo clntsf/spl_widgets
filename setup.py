@@ -5,7 +5,7 @@ import setuptools
 
 setuptools.setup(
     name="spl_widgets",
-    version="1.5.0",
+    version="1.5.2",
     author="Colin Simon-Fellowes",
     author_email="colin.tsf@gmail.com",
     description="Widgets for the Barnard Speech Perception Laboratory",
@@ -18,8 +18,8 @@ setuptools.setup(
         "Operating System :: MacOS",
     ],
     package_dir={"": "src"},
-    packages=setuptools.find_packages(where="src"),
-    install_requires=['pandas'],
+    packages=["spl_widgets", "spl_widgets.autoscorer", "spl_widgets.util"],
+    install_requires=['pandas', 'tkinterdnd2'],
     python_requires=">=3.8",
     entry_points='''
         [console_scripts]
