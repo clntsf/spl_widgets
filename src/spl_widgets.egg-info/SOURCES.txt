@@ -5,7 +5,6 @@ setup.py
 src/spl_widgets/__init__.py
 src/spl_widgets/__main__.py
 src/spl_widgets/batch_tune.py
-src/spl_widgets/clear_aliases.py
 src/spl_widgets/gorilla_clean.py
 src/spl_widgets/jukemake.py
 src/spl_widgets/misc_util.py

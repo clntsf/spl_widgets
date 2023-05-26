@@ -1,4 +1,5 @@
 [console_scripts]
+autoscore = spl_widgets.autoscorer.autoscorer_gui:main
 batch_tune = spl_widgets.batch_tune:main
 gorilla_clean = spl_widgets.gorilla_clean:main
 jukemake = spl_widgets.jukemake:main
