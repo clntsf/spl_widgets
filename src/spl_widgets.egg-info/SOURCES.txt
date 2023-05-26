@@ -17,3 +17,4 @@ src/spl_widgets.egg-info/dependency_links.txt
 src/spl_widgets.egg-info/entry_points.txt
 src/spl_widgets.egg-info/requires.txt
 src/spl_widgets.egg-info/top_level.txt
+src/spl_widgets/data/cmudict.sqlite
