@@ -1,2 +1,3 @@
 pandas
 tkinterdnd2
+openpyxl

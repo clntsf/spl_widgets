@@ -7,12 +7,13 @@ from openpyxl import Workbook
 from openpyxl.worksheet import dimensions
 from openpyxl.worksheet.worksheet import Worksheet
 
-from typing import TypeAlias
+from typing import TypeAlias, Literal
 
 from spl_widgets.autoscorer.tokenize_to_ipa import *
 from spl_widgets.util.color_util import to_rich_text
 
 AutoscorerTokens: TypeAlias =  list[ tuple[str, int, bool|None] ]
+ScoringMode: TypeAlias = Literal['preferred-transcription', 'best-match']
 
 # this version of the autoscorer uses a token list instead of a string, allowing
 # for the treatment of 2+ wide characters (e.g. diphthongs) as single tokens
@@ -209,7 +210,11 @@ def output_scoring(
     evaluation = "".join(transcription_chars)   # combine all tokens for evaluation
     return (score, best_poss_score, evaluation)
 
-def get_results(sentence_ipa: str, transcription: str, scoring_mode: str) -> tuple[ list[str], tuple[int, AutoscorerTokens] ]:
+def get_results(
+    sentence_ipa: str,
+    transcription: str,
+    scoring_mode: ScoringMode
+    ) -> tuple[ list[str], tuple[int, AutoscorerTokens] ]:
     
     if scoring_mode == "preferred-transcription":
         transcription_ipa = str_to_ipa(transcription, True)
@@ -224,7 +229,12 @@ def get_results(sentence_ipa: str, transcription: str, scoring_mode: str) -> tup
 
         return max(poss_results, key = lambda n: n[1][0])
 
-def process_inputs(inputs: list[tuple[str,str]], ws: Worksheet, ideal_ipa: list[str] = ..., **kwargs) -> None:
+def process_inputs(
+    inputs: list[tuple[str,str]],
+    ws: Worksheet,
+    scoring_mode: ScoringMode,
+    ideal_ipa: list[str] = ...
+    ) -> None:
     
     # utility function to make populating rows of the output file faster
     def fill_row(row: int, values: tuple[str,...]):
@@ -247,12 +257,10 @@ def process_inputs(inputs: list[tuple[str,str]], ws: Worksheet, ideal_ipa: list[
     total_score = [0,0]
 
     (sentences, transcriptions) = [*zip(*inputs)]
-    if ideal_ipa == ...:
+    if ideal_ipa is ...:
         sentence_ipas = [*map(str_to_ipa, sentences)]
     else:
         sentence_ipas = [*map(tokenize_ipa, ideal_ipa)]
-
-    scoring_mode = kwargs.get("scoring_mode", "preferred-transcription")
 
     # iterate over the target-transcription pairs
     row=2                                               # doing it this way to use row outside of the loop's scope after
@@ -300,7 +308,13 @@ def process_inputs(inputs: list[tuple[str,str]], ws: Worksheet, ideal_ipa: list[
 
     ws.column_dimensions = dim_holder
 
-def main(df: pd.DataFrame = ..., out_dir: str = ..., out_fn: str = ..., ideal_ipa: list[str] = ...):
+def main(
+    df: pd.DataFrame = ...,
+    out_dir: str = ...,
+    out_fn: str = ...,
+    ideal_ipa: list[str] = ...,
+    scoring_mode: ScoringMode = "preferred-transcription"
+    ):
 
     root = Tk()
     root.withdraw()
@@ -331,7 +345,7 @@ def main(df: pd.DataFrame = ..., out_dir: str = ..., out_fn: str = ..., ideal_ip
         ws = wb.create_sheet(col)
 
         inputs: list[tuple[str,str]] = [ *zip(target, df[col]) ]
-        process_inputs(inputs, ws, ideal_ipa)
+        process_inputs(inputs, ws, scoring_mode, ideal_ipa)
 
     outpath = Path(out_dir, f"{out_fn}.xlsx")
     wb.save(outpath)

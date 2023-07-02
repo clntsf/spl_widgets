@@ -2,15 +2,13 @@ from openpyxl.cell.rich_text import TextBlock, CellRichText
 from openpyxl.cell.text import InlineFont
 import re
 
-from pathlib import Path
-
 # This regex is largely simplified now & does not use exact ANSI escape codes
 # because there is literally no reason to, these will never be printed to terminal 
 
 # instead, I use an abbreviated version: \Rabc\C is a red "abc" instead of \x1b[31mabc\x1b[39m
 # because isn't that just so much better
 
-# to get a sense for this working use https://regex101.com/r/LjUtFx/1
+# to get a sense for this working use https://regex101.com/r/B0LoLF/1
 COLOR_TEXT_RE = r"(?:\\([RGY]))?([^\\]+)(?:\\C)?"
 
 # colors are ARGB, so first 2 are alpha channel
