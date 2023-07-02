@@ -372,16 +372,17 @@ class AutoscorerGUI:
             side="top", fill="y", expand=True
         )
 
-        def defocus_hl(e: tk.Event):
-            listbox: MarginListBox = e.widget
-            if (curselected:=listbox.curselection()) == "": # nothing selected
+        def defocus_hl(listbox: MarginListBox):
+
+            if (curselected:=listbox.curselection()) == (): # nothing selected
                 return
 
             if listbox.get(curselected) == HL:
                 listbox.selection_clear(0, tk.END)
 
         self.output_data_listbox.bind(
-            "<<ListboxSelect>>", defocus_hl
+            "<<ListboxSelect>>",
+            lambda x: defocus_hl(x.widget)
         )
 
         self.output_data_listbox.bind(                   # bind double-clicking on a listbox item to open that file
