@@ -373,9 +373,11 @@ class AutoscorerGUI:
         )
 
         def defocus_hl(e: tk.Event):
-
             listbox: MarginListBox = e.widget
-            if listbox.get(listbox.curselection()) == HL:
+            if (curselected:=listbox.curselection()) == "": # nothing selected
+                return
+
+            if listbox.get(curselected) == HL:
                 listbox.selection_clear(0, tk.END)
 
         self.output_data_listbox.bind(
@@ -432,7 +434,7 @@ class AutoscorerHelpWindow:
             highlightthickness=1
         )
         notebook_tab_FILE_INPUT.pack(fill="both", expand=True)
-
+        # TODO: ADD INPUT HELP TEXT HERE
         
 
         notebook_tab_SCORING_MODE = tk.Frame(
@@ -441,7 +443,7 @@ class AutoscorerHelpWindow:
             highlightthickness=1
         )
         notebook_tab_SCORING_MODE.pack(fill="both", expand=True)
-
+        # TODO: ADD SCORING MODE HELP TEXT HERE
 
 
         notebook_tab_FILE_OUTPUT = tk.Frame(
@@ -450,7 +452,7 @@ class AutoscorerHelpWindow:
             highlightthickness=1
         )
         notebook_tab_FILE_OUTPUT.pack(fill="both", expand=True)
-
+        # TODO: ADD OUTPUT HELP TEXT HERE
 
         self.help_notebook.add(notebook_tab_FILE_INPUT, text="File Input", sticky="nsew")
         self.help_notebook.add(notebook_tab_SCORING_MODE, text="Scoring Mode Options", sticky="nsew")
