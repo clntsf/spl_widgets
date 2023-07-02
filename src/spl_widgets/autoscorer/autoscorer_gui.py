@@ -8,7 +8,8 @@ import re
 import pandas as pd
 
 from spl_widgets.util.gui_util import RadioFrame, MarginListBox, HelpLinkLabel
-from spl_widgets.autoscorer import autoscore
+# from spl_widgets.autoscorer import autoscore
+import autoscore
 
 HL = "*"*29
 
@@ -65,7 +66,22 @@ class AutoscorerGUI:
 
             return True
 
-    def process_output_combined(self, input_files: dict[str, Path]):
+    def get_ideal_ipas(self, subject_df: pd.DataFrame, ideal_ipa_path: tuple[str, Path] = ...) -> tuple[str, list[str]]:
+        scoring_mode = "preferred-transcription"
+        ideal_ipas = ...
+            
+        if ideal_ipa_path is not ...:
+            (fn, fp) = ideal_ipa_path
+            ideal_ipas_df = pd.read_excel(fp, header=0)
+            ideal_ipas_df.columns = ["Target", "IPA"]
+
+            if self.validate_df("IDEAL IPA FILE: "+fn, ideal_ipas_df, subject_df):
+                scoring_mode = "best-match"
+                ideal_ipas = ideal_ipas_df["IPA"]
+        
+        return (scoring_mode, ideal_ipas)
+
+    def process_output_combined(self, input_files: dict[str, Path], ideal_ipa_path: tuple[str, Path] = ...):
         df = None
         for (fn, fp) in input_files:
             subject_df = pd.read_excel(fp, header=0)
@@ -82,9 +98,7 @@ class AutoscorerGUI:
             subj_transcriptions = subject_df[subj_header]
             df[subj_header] = subj_transcriptions
 
-        if self.ideal_ipa_listbox.size() == 0:
-            ideal_ipas = ...
-
+        (scoring_mode, ideal_ipas) = self.get_ideal_ipas(df, ideal_ipa_path)
 
         outpath = Path(filedialog.asksaveasfilename(
             filetypes = [("Excel Files", "*.xlsx")],
@@ -97,7 +111,7 @@ class AutoscorerGUI:
         out_dir = outpath.parent
         out_fn = outpath.stem
 
-        autoscore.main( df, out_dir, out_fn, ideal_ipas )
+        autoscore.main( df, out_dir, out_fn, ideal_ipas, scoring_mode )
 
         self.output_data_listbox.add_item(outpath)
         self.output_data_listbox.insert(tk.END, HL) # horizontal line separating output batches
@@ -138,7 +152,12 @@ class AutoscorerGUI:
         self.output_data_listbox.insert(tk.END, HL)
 
     def autoscore_with_data(self):
-        # print("Autoscoring!")
+
+        if self.ideal_ipa_listbox.size() > 0:
+            ideal_ipa_path = [*self.ideal_ipa_listbox.data_items.items()][0]
+            
+        else:
+            ideal_ipa_path = ...
 
         # validate data
         if self.input_data_listbox.size() == 0:
@@ -148,9 +167,9 @@ class AutoscorerGUI:
         combine_output = self.combine_output.get()
 
         if combine_output:
-            self.process_output_combined(input_files)
+            self.process_output_combined(input_files, ideal_ipa_path)
         else:
-            self.process_output_separate(input_files)
+            self.process_output_separate(input_files, ideal_ipa_path)
 
     def make_help_window(self):
         self.help_window = tk.Toplevel(self.master)
@@ -280,7 +299,6 @@ class AutoscorerGUI:
             text = "Combine output into a single file",
             variable=self.combine_output,
             onvalue = True, offvalue = False,
-            # command = lambda: print(self.combine_output.get())
         )
         combine_output_checkbox.pack(side="top", padx = 5, pady=(0,3))
 
@@ -339,7 +357,7 @@ class AutoscorerGUI:
         def add_output_file(listbox: MarginListBox, data: dict, filepath: Path):
             fn = filepath.name
 
-            listbox.insert(0, fn)
+            listbox.insert(tk.END, fn)
             data[fn] = filepath
 
         self.output_data_listbox = MarginListBox(
@@ -354,14 +372,17 @@ class AutoscorerGUI:
             side="top", fill="y", expand=True
         )
 
-        def defocus_hl(e: tk.Event):
+        def defocus_hl(listbox: MarginListBox):
 
-            listbox: MarginListBox = e.widget
-            if listbox.get(listbox.curselection()) == HL:
+            if (curselected:=listbox.curselection()) == (): # nothing selected
+                return
+
+            if listbox.get(curselected) == HL:
                 listbox.selection_clear(0, tk.END)
 
         self.output_data_listbox.bind(
-            "<<ListboxSelect>>", defocus_hl
+            "<<ListboxSelect>>",
+            lambda x: defocus_hl(x.widget)
         )
 
         self.output_data_listbox.bind(                   # bind double-clicking on a listbox item to open that file
@@ -414,7 +435,7 @@ class AutoscorerHelpWindow:
             highlightthickness=1
         )
         notebook_tab_FILE_INPUT.pack(fill="both", expand=True)
-
+        # TODO: ADD INPUT HELP TEXT HERE
         
 
         notebook_tab_SCORING_MODE = tk.Frame(
@@ -423,7 +444,7 @@ class AutoscorerHelpWindow:
             highlightthickness=1
         )
         notebook_tab_SCORING_MODE.pack(fill="both", expand=True)
-
+        # TODO: ADD SCORING MODE HELP TEXT HERE
 
 
         notebook_tab_FILE_OUTPUT = tk.Frame(
@@ -432,7 +453,7 @@ class AutoscorerHelpWindow:
             highlightthickness=1
         )
         notebook_tab_FILE_OUTPUT.pack(fill="both", expand=True)
-
+        # TODO: ADD OUTPUT HELP TEXT HERE
 
         self.help_notebook.add(notebook_tab_FILE_INPUT, text="File Input", sticky="nsew")
         self.help_notebook.add(notebook_tab_SCORING_MODE, text="Scoring Mode Options", sticky="nsew")
