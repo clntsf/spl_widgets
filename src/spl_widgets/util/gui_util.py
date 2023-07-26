@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import ttk
 from typing import Callable
 
 class RadioFrame(tk.Frame):
@@ -11,8 +12,8 @@ class RadioFrame(tk.Frame):
         onchange: Callable = None,
         orientation: str = "v",
         **kwargs
-        ) -> tk.Frame:
-        tk.Frame.__init__(self, master, **kwargs)
+        ):
+        super().__init__(master, **kwargs)
 
         self.master = master
         self.variable = tk.IntVar()
@@ -111,3 +112,52 @@ class HelpLinkLabel(tk.Label):
 
     def pack_frame(self, **kwargs):
         self.enclosing_frame.pack(**kwargs)
+
+FONT_TITLE = ("TkDefaultFont", 14, "bold")
+NOTEBOOK_TAB_WIDTH = 350
+NOTEBOOK_TAB_MARG=30
+
+class HelpTextParser(tk.Frame):
+    content: tk.Frame
+
+    def __init__(self, master, items: dict[str,str], **kwargs):
+        super().__init__( master, **kwargs )
+
+        self.canvas=tk.Canvas(self,width=NOTEBOOK_TAB_WIDTH, scrollregion=(0,0,300,500))
+        
+        scrollbar=tk.Scrollbar(self, command=self.canvas.yview)
+        scrollbar.pack(side="right",fill="y", expand=True)
+        scrollbar.config(command=self.canvas.yview)
+
+        self.content = tk.Frame(self.canvas)
+        self.canvas.create_window((0,0), window=self.content, anchor="nw")
+        
+        self.canvas.config(yscrollcommand=scrollbar.set)
+        self.canvas.pack(side="left",expand=True,fill='both')
+
+        self.parse_text(items)
+
+    def parse_text(self, items: dict[str, str]) -> None:
+
+        for (title, content) in items.items():
+            heading_frame = tk.Frame(self.content, padx=10)
+            heading_frame.pack(side="top", anchor="w")
+
+            heading_title = tk.Label(
+                heading_frame, text = title, font = FONT_TITLE,
+                wraplength=NOTEBOOK_TAB_WIDTH-NOTEBOOK_TAB_MARG,
+                justify="left"
+            )
+            heading_title.pack(side="top", anchor="w", pady=3)
+
+            heading_text = tk.Label(
+                heading_frame, text = content,
+                wraplength=NOTEBOOK_TAB_WIDTH-NOTEBOOK_TAB_MARG,
+                justify="left"
+            )
+            heading_text.pack(side="top", anchor="w", padx=5, pady=5)
+
+            sep = ttk.Separator(heading_frame, orient="horizontal")
+            sep.pack(fill="x", side="top", pady=5)
+
+            

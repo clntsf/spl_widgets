@@ -5,7 +5,7 @@ import setuptools
 
 setuptools.setup(
     name="spl_widgets",
-    version="1.5.3",
+    version="1.7.1",
     author="Colin Simon-Fellowes",
     author_email="colin.tsf@gmail.com",
     description="Widgets for the Barnard Speech Perception Laboratory",
@@ -31,5 +31,5 @@ setuptools.setup(
         autoscorer=spl_widgets.autoscorer.autoscorer_gui:main
     ''',
     include_package_data=True,
-    package_data={'': ['data/*.sqlite']}
+    package_data={'': ['data/*']}
 )

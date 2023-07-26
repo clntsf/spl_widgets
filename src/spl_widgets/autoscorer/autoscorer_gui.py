@@ -7,9 +7,11 @@ from subprocess import run
 import re
 import pandas as pd
 
-from spl_widgets.util.gui_util import RadioFrame, MarginListBox, HelpLinkLabel
-# from spl_widgets.autoscorer import autoscore
-import autoscore
+import pkg_resources
+import json
+
+from spl_widgets.util.gui_util import RadioFrame, MarginListBox, HelpLinkLabel, HelpTextParser, NOTEBOOK_TAB_WIDTH
+from spl_widgets.autoscorer import autoscore
 
 HL = "*"*29
 
@@ -19,7 +21,7 @@ class AutoscorerGUI:
     ideal_ipa_listbox: MarginListBox
     output_data_listbox: MarginListBox
 
-    def __init__(self, master):
+    def __init__(self, master: tk.Tk):
         self.master = master
 
         self.make_help_window()
@@ -173,8 +175,14 @@ class AutoscorerGUI:
 
     def make_help_window(self):
         self.help_window = tk.Toplevel(self.master)
+        self.help_window.resizable(False,True)
         self.help_window.title("Autoscorer GUI Help Menu")
-        self.help_app = AutoscorerHelpWindow(self.help_window)
+
+        help_text_fp = pkg_resources.resource_filename("spl_widgets", "data/help_text.json")
+        with open(help_text_fp, "r") as reader:
+            help_text_json = json.load(reader)
+
+        self.help_app = AutoscorerHelpWindow(self.help_window, help_text_json)
 
     def update_scoring_mode_radios(self):
         if self.ideal_ipa_listbox.size() == 1:
@@ -395,6 +403,11 @@ class AutoscorerGUI:
             self.help_window.deiconify()
         except tk.TclError:
             self.make_help_window()
+            return self.show_help()
+
+        # set the heights of the scrollbars - done here because the window must be loaded for it to work,
+        # and it isn't time consuming so it's not an issue if it runs each time the window opens
+        self.help_app.set_scroll_heights()
 
     def hide_help(self):
         self.help_window.withdraw()
@@ -417,62 +430,89 @@ class AutoscorerGUI:
         nb.select(tab_idx)
 
 class AutoscorerHelpWindow:
-    def __init__(self, master: tk.Toplevel):
+    def __init__(self, master: tk.Toplevel, text: dict):
         self.master = master
+        self.text = text
 
         help_main_frame = tk.Frame(self.master)
         help_main_frame.pack(fill="both", expand=True, pady=10)
 
         self.help_notebook = ttk.Notebook(
-            help_main_frame, width=200, height=200, padding=0
+            help_main_frame, width=NOTEBOOK_TAB_WIDTH+20, height=250, padding=0
         )
         self.help_notebook.pack(side="top", fill="both", expand=True)
 
+        # this is an unbelievably ridiculous hack brought on by the idiocy of MacOS somehow
+        # refusing to work properly with tkinter. When a notebook tab is switched, tkinter
+        # refuses to draw the contents of the tab until the mouse is moved (or, less reliably,
+        # another mouse click occurs). As such, we wait 20ms and simulate a mouse move event
+        # whenever we switch tabs, because we just can't have nice things
+        def force_refresh(evt: tk.Event):
+            sim_event= lambda: self.help_notebook.event_generate("<Motion>", x=100, y=100)
+            self.master.after(20, sim_event)
 
+        self.help_notebook.bind("<<NotebookTabChanged>>", force_refresh)
+
+        # File input help tab
         notebook_tab_FILE_INPUT = tk.Frame(
-            self.help_notebook,
+            help_main_frame,
             highlightbackground="black",
             highlightthickness=1
         )
         notebook_tab_FILE_INPUT.pack(fill="both", expand=True)
-        # TODO: ADD INPUT HELP TEXT HERE
-        
+        self.input_help = HelpTextParser(notebook_tab_FILE_INPUT, text["input-help"])
+        self.input_help.pack(side="left", anchor="nw", fill="both", expand=True)
 
+        # Scoring mode help tab
         notebook_tab_SCORING_MODE = tk.Frame(
-            self.help_notebook,
+            help_main_frame,
             highlightbackground="black",
             highlightthickness=1
         )
         notebook_tab_SCORING_MODE.pack(fill="both", expand=True)
-        # TODO: ADD SCORING MODE HELP TEXT HERE
+        self.scoring_help = HelpTextParser(notebook_tab_SCORING_MODE, text["scoring-mode-help"])
+        self.scoring_help.pack(side="top", anchor="nw", fill="both", expand=True)
 
-
+        # File output help tab
         notebook_tab_FILE_OUTPUT = tk.Frame(
-            self.help_notebook,
+            help_main_frame,
             highlightbackground="black",
             highlightthickness=1
         )
         notebook_tab_FILE_OUTPUT.pack(fill="both", expand=True)
-        # TODO: ADD OUTPUT HELP TEXT HERE
-
+        self.output_help = HelpTextParser(notebook_tab_FILE_OUTPUT, text["output-help"])
+        self.output_help.pack(side="top", anchor="nw", fill="both", expand=True)
+        
+        # Add the tabs to the notebook
         self.help_notebook.add(notebook_tab_FILE_INPUT, text="File Input", sticky="nsew")
         self.help_notebook.add(notebook_tab_SCORING_MODE, text="Scoring Mode Options", sticky="nsew")
         self.help_notebook.add(notebook_tab_FILE_OUTPUT, text="File Output", sticky="nsew")
 
+        # Add the quit button
         help_quitbutton = tk.Button(
             help_main_frame,
             text="Hide this window",
             command=self.master.withdraw
         )
         help_quitbutton.pack(
-            side="bottom", anchor="se", pady=(0,5), padx=5
+            side="bottom", anchor="se", pady=0, padx=5
         )
+
+    # set the scroll region of the tabs in the notebook. Can only be run once the help window is loaded
+    def set_scroll_heights(self):
+        
+        for tab_content in [self.input_help, self.scoring_help, self.output_help]:
+            width = tab_content.content.winfo_width()
+            height = tab_content.content.winfo_height()
+            
+            tab_content.canvas.configure(scrollregion=(0,0,width,height))
 
 # for use in the output side
 
 def main():
     root = TkinterDnD.Tk()
     root.title("Autoscorer GUI")
+    root.resizable(False, False)
 
     app = AutoscorerGUI(root)
     root.mainloop()

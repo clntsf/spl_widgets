@@ -21,6 +21,7 @@ src/spl_widgets/autoscorer/autoscore.py
 src/spl_widgets/autoscorer/autoscorer_gui.py
 src/spl_widgets/autoscorer/tokenize_to_ipa.py
 src/spl_widgets/data/cmudict.sqlite
+src/spl_widgets/data/help_text.json
 src/spl_widgets/util/color_util.py
 src/spl_widgets/util/gui_util.py
 src/spl_widgets/util/sqlite_db.py
