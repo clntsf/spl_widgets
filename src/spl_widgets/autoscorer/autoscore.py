@@ -120,7 +120,11 @@ def score_transcription(
             tokens_between = "".join(                                    # get the omitted tokens
                 sentence_ipa[sentence_ipa_idx:new_sentence_ipa_idx]
             )
-            omitted_idx = max(n[1] for n in _prev_scored)+1                         # get the index of the first omitted char in this group
+
+            # get the index of the first omitted char in this group
+            omitted_idx = 0                 # prevent the program breaking if the omitted character is the very first of the transcription
+            if len(_prev_scored) > 0:
+                omitted_idx = max(n[1] for n in _prev_scored)+1
             omitted_chars = [(tokens_between.strip(), omitted_idx, None)]            # create the token
 
             return max(

@@ -209,7 +209,7 @@ class AutoscorerGUI:
             
             FILENAME_RE = r"({.+?}|[\S]+)"
             filepaths = re.findall(FILENAME_RE, e.data)
-            filepaths = [Path(re.sub(r"[{}]", "", fp)) for fp in filepaths]
+            filepaths = [Path(re.sub(r"[\{\}]", "", fp)) for fp in filepaths]
 
             def try_add_file(f: Path):
                 if f.suffix != ".xlsx":
@@ -237,7 +237,7 @@ class AutoscorerGUI:
             listbox.delete(delete_item)
 
         def add_ideal_ipa_file(listbox: tk.Listbox, data: dict, e) -> None:
-            f = Path(e.data)
+            f = Path(re.sub(r"[{}]", "", e.data))
             if f.suffix != ".xlsx":
                 print(f"[WARNING]: Only files of type .xlsx allowed, received type '{f.suffix}'")
                 return
