@@ -279,7 +279,7 @@ def process_inputs(
             sentence_ipa, transcription_ipa, results
         )
 
-        display_sentence_ipa = "".join(str_to_ipa(sentence,True))
+        display_sentence_ipa = "".join(sentence_ipa)
         display_transcription_ipa = "".join(transcription_ipa)
 
         total_score[0] += score
