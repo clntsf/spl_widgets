@@ -364,9 +364,12 @@ class AutoscorerGUI:
 
         def add_output_file(listbox: MarginListBox, data: dict, filepath: Path):
             fn = filepath.name
+            fn2 = f"{filepath.stem}_PER_SEGMENT.xlsx"
 
             listbox.insert(tk.END, fn)
+            listbox.insert(tk.END, fn2)
             data[fn] = filepath
+            data[fn2] = Path(filepath.parent, fn2)
 
         self.output_data_listbox = MarginListBox(
             output_frame,

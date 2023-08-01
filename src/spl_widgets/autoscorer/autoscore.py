@@ -160,7 +160,7 @@ def output_scoring(
     sentence_ipa: list[str],
     transcription_ipa: list[str],
     results: tuple[ int, AutoscorerTokens ]
-    ) -> tuple[int,int,str]:
+    ) -> tuple[int,int,str, list[int]]:
     """
     Takes the results of score_transcription() and outputs them as formatted strings
     containing the autoscorer's evaluation and score for the transcription
@@ -190,6 +190,18 @@ def output_scoring(
     best_poss_score = sum( map(str.isalpha, sentence_ipa) )
     transcription_chars = [*transcription_ipa]                  # split the string
 
+    # produce score by phoneme
+    score_by_phoneme = []
+    for (token, idx, is_valid) in prev_scored:
+        if is_valid is False: # extraneous
+            continue
+        if is_valid is True:  # included
+            score_by_phoneme.append(1)
+            continue
+
+        tok_len = len([*filter(str.isalpha, tokenize_ipa(token))])
+        score_by_phoneme.extend([0]*tok_len)
+
     # separate tokens into included and omitted for the two formatting passes
     included_tokens = [*filter(lambda n: n[2] is not None, prev_scored)]
     omitted_tokens = [*filter(lambda n: n[2] is None, prev_scored)]
@@ -212,7 +224,7 @@ def output_scoring(
         incr += 1
 
     evaluation = "".join(transcription_chars)   # combine all tokens for evaluation
-    return (score, best_poss_score, evaluation)
+    return (score, best_poss_score, evaluation, score_by_phoneme)
 
 def get_results(
     sentence_ipa: str,
@@ -238,7 +250,7 @@ def process_inputs(
     ws: Worksheet,
     scoring_mode: ScoringMode,
     ideal_ipa: list[str] = ...
-    ) -> None:
+    ) -> tuple[dict[str, list[int]], list[list[str]]]:
     
     # utility function to make populating rows of the output file faster
     def fill_row(row: int, values: tuple[str,...]):
@@ -266,6 +278,8 @@ def process_inputs(
     else:
         sentence_ipas = [*map(tokenize_ipa, ideal_ipa)]
 
+    phoneme_scores_by_sentence = {}
+
     # iterate over the target-transcription pairs
     row=2                                               # doing it this way to use row outside of the loop's scope after
     for (sentence, sentence_ipa, transcription) in zip(sentences, sentence_ipas, transcriptions):
@@ -275,9 +289,11 @@ def process_inputs(
 
         transcription_ipa, results = get_results(sentence_ipa, transcription, scoring_mode)
 
-        score, best_poss_score, evaluation = output_scoring(                # format the results
+        score, best_poss_score, evaluation, score_by_phoneme = output_scoring(                # format the results
             sentence_ipa, transcription_ipa, results
         )
+
+        phoneme_scores_by_sentence[sentence] = score_by_phoneme
 
         display_sentence_ipa = "".join(sentence_ipa)
         display_transcription_ipa = "".join(transcription_ipa)
@@ -312,6 +328,8 @@ def process_inputs(
 
     ws.column_dimensions = dim_holder
 
+    return phoneme_scores_by_sentence, sentence_ipas
+
 def main(
     df: pd.DataFrame = ...,
     out_dir: str = ...,
@@ -344,15 +362,32 @@ def main(
 
     target = df["Target"]   # get target sentences
 
+    user_sentence_phoneme_scores: dict[str, dict[str,str|list[int]]] = {}
     # iterate through subject columns
     for col in df.columns[1:]:
         ws = wb.create_sheet(col)
 
         inputs: list[tuple[str,str]] = [ *zip(target, df[col]) ]
-        process_inputs(inputs, ws, scoring_mode, ideal_ipa)
+        phoneme_scores_by_sentence, sentence_ipas = process_inputs(inputs, ws, scoring_mode, ideal_ipa)    # write to worksheet & return phoneme scores
+
+        for (sentence, score) in phoneme_scores_by_sentence.items():
+            user_sentence_phoneme_scores.setdefault(sentence, {})
+            user_sentence_phoneme_scores[sentence][col] = score
 
     outpath = Path(out_dir, f"{out_fn}.xlsx")
     wb.save(outpath)
 
+    dfs = {}
+
+    with pd.ExcelWriter(Path(out_dir, f"{out_fn}_PER_SEGMENT.xlsx"), engine="openpyxl") as writer:
+        for (i, (sentence,scores)) in enumerate(user_sentence_phoneme_scores.items()):
+            avg = lambda l: round(sum(l)/len(l), 2)
+            scores["AVG"] = [*map(avg, zip(*scores.values()))]
+
+            tokens = [*filter(str.isalpha, sentence_ipas[i])]
+            df = pd.DataFrame(scores, index=tokens).T
+        
+            df.to_excel(writer, sheet_name=sentence[:31])
+    
 if __name__ == "__main__":
     main()

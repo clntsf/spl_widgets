@@ -5,6 +5,8 @@ import pkg_resources
 database_fp = pkg_resources.resource_filename("spl_widgets", "data/cmudict.sqlite")
 dba = SQLiteDB(database_fp, silent=True)
 
+PUNCT_RE = r"(\W*)([\w\']*)(\W*)"
+
 # https://en.wikipedia.org/wiki/ARPABET#Symbols
 phonemes = {
   "AA": "ɑ",
@@ -60,7 +62,7 @@ phonemes = {
 }
 
 def get_arpabet(word: str) -> list[list[str]]|str:
-    data = dba.execute_read_query(f"SELECT transcriptions FROM phones WHERE word = '{word}'")
+    data = dba.execute_read_query(f'SELECT transcriptions FROM phones WHERE word = "{word}"')
     
     if data == []:                          # invalid word
         # ('*'*word.isalpha()) only flags all-alpha invalid words, not just floating punctuation
@@ -73,7 +75,7 @@ def get_arpabet(word: str) -> list[list[str]]|str:
 def to_arpabet(sentence: str, keep_punct: bool = True) -> list[str]:
 
     arpa_words = []
-    PUNCT_RE = r"(\W*)(\w*)(\W*)"
+    
 
     for wd in sentence.split(" "):
 
@@ -98,7 +100,6 @@ def to_arpabet(sentence: str, keep_punct: bool = True) -> list[str]:
 
 def to_arpabet_all(sentence: str, keep_punct: bool = True) -> list[list[str]]:
     arpa_sentences: list[list[str]] = []
-    PUNCT_RE = r"(\W*)(\w*)(\W*)"
 
     for wd in sentence.split(" "):
 
@@ -166,6 +167,6 @@ def str_to_ipa(sentence: str, keep_punct: bool = False) -> list[str]:
 # mostly good, and worst case we just switch to passing them as a lists of tokens)
 def tokenize_ipa(ipa_str: str) -> list[str]:
     tokens = sorted(phonemes.values(), key=len, reverse=True)   # prioritize finding diphthongs
-    token_re = rf"({'|'.join(tokens)}|\s|.)"
+    token_re = rf"({'|'.join(tokens)}|\s|\*[\w\']*)"
 
     return re.findall(token_re, ipa_str)
