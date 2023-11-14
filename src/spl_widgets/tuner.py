@@ -196,7 +196,8 @@ class TunerApp(tk.Tk):
 
     def tune_with_data(self):
         filepath = self.file_var.get()
-        interval = int(self.interval_var.get())
+        interval_str = self.interval_var.get()
+        interval = (int(interval_str) if interval_str else False)
         tune_freqs = self.tune_freqs_var.get()
         scale = self.get_scale_vals()
 
