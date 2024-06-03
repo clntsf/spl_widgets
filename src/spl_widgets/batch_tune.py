@@ -8,7 +8,8 @@ import re
 from spl_widgets.misc_util import get_tuning_info
 from spl_widgets.tune_freq import tune_cols
 
-KEY_REGEX = r"^([01][0-9]{2}-[0-9A-Fa-f]{3})$"
+# god help us all (try regex101.com if you care to puzzle this one out)
+KEY_REGEX = r"^([01][0-9]{2}-[0-9A-Fa-f]{3}(?:-[0-9A-Fa-f]{1,2})?)$"
 
 def get_file(*args, **kwargs):
     params_file = filedialog.askopenfilename(*args, **kwargs)
@@ -70,11 +71,11 @@ def main():
         raise ValueError(f"Invalid path to parameter file: {params_fp}")
 
     keys = re.findall(KEY_REGEX, text, re.MULTILINE)        # get keys from params file text
-
+    print(keys)
     successful=False    # whether the program has successfully done any tunings
     for k in keys:      # tune with each key
         try:                                                # get tuning params from key
-            tune_freqs, interval, scale_list, _fmts_to_tune = get_tuning_info(k)
+            tune_freqs, interval, scale_list, fmts_to_tune = get_tuning_info(k)
             tune_freqs = bool(tune_freqs)
             successful = True
         except Exception:                                   # bad key, skip tune
@@ -84,7 +85,7 @@ def main():
         print(f"[DEBUG]: Tuning with key '{k}':")
         print(f" - {tune_freqs = } \n - {interval = } \n - {scale_list = } \n")
 
-        tune_cols(swx_fp, interval, scale_list, tune_freqs) # tune with key
+        tune_cols(swx_fp, interval, scale_list, tune_freqs, fmts_to_tune) # tune with key
 
     if not successful:                                  # no keys worked, bail
         print("[Error]: No keys successfully produced a tuned file!")

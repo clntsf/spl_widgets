@@ -1,5 +1,13 @@
 {
-    "input-help":{},
-    "scoring-mode-help":{},
-    "output-help":{}
+    "input-help":{
+        
+    },
+    "scoring-mode-help":{
+        "i. General": "    This tool can run on two different scoring modes: \"Best-Match\" and \"Preferred\". These modes have different behaviours, explained below:"
+    },
+    "output-help":{
+        "i. General": "    When one or more files are autoscored by this tool the resulting output will appear in the bar at the right-hand side of the screen. If 'Combine output into a single file' was selected, only one file will appear, otherwise one output file will appear for each input file.",
+        "ii. Opening Output Files":"    Files in the 'Autoscored Output File(s)' column can be opened by double-clicking on their names in the column. \n(WARNING: if output files of the same name are created in the same location and one of the files in the output column is overwritten as a result, the result of double-clicking it is undefined. Take precautions to properly save all output files, renaming or moving if necessary)",
+        "iii. Files Separated by Asterisks": "    Files from previous scoring runs in the same session (since the tool has been launched) will remain in the output column. A horizontal line of asterisks will be placed between each created batch of output files to allow the user to determine which files belong to which sets \n(WARNING: the warning given in ii. applies here as well.)"
+    }
 }

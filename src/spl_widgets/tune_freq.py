@@ -14,12 +14,49 @@ bad_file_str = dedent("""
     and provide a copy of the file and its .stk equivalent (if possible)."""
 )
 
+def tune_col(
+        freq_col: list[float],
+        amp_col: list[float],
+        interval: int,
+        tune_freqs: bool,
+        scale_notes: list[float]
+    ) -> list[float]:
+
+    freq_col = np.where(amp_col>0, freq_col, 0)
+    new_col =[]
+    
+    for slice_start in range(0, len(freq_col), interval):
+
+        slice_end = slice_start + interval
+        freq_slice = freq_col[slice_start:slice_end]
+
+        nz_amps = np.count_nonzero(amp_col[slice_start:slice_end])
+        if nz_amps == 0:
+            new_col.extend(freq_slice)
+            continue
+
+        range_freq = sum(freq_slice) / nz_amps
+
+        if tune_freqs is True and range_freq != 0:
+            range_freq = get_closest(scale_notes, range_freq)
+
+        new_col+=[range_freq]*len(freq_slice)
+
+    for i, cell in enumerate(new_col):
+        if cell == 0:
+            if max(amp_col[max(0,i-1):i+2]) == 0:
+                continue
+
+            new_col[i] = max(new_col[max(0,i-1):i+2])
+
+    return new_col
+
 def tune_cols(
-    filepath: str,
-    interval: int,
-    scale: list[int],
-    tune_freqs: bool,
-    fmts_to_tune: list[int]|None
+        filepath: str,
+        interval: int,
+        scale: list[int],
+        tune_freqs: bool,
+        fmts_to_tune: list[int]|None
     ) -> str:
 
     try:
@@ -45,39 +82,10 @@ def tune_cols(
         amp_col = df.iloc[:,2*fmt]
         freq_col = df.iloc[:,2*fmt-1]
  
-        if not (fmt in fmts_to_tune):
-            out_df[f'F{fmt}']=freq_col
-            out_df[f'A{fmt}']=amp_col
-            continue
+        if fmt in fmts_to_tune:
+            freq_col = tune_col(freq_col, amp_col, interval, tune_freqs, scale_notes)
 
-        freq_col = np.where(amp_col>0, freq_col, 0)
-        new_col =[]
- 
-        for slice_start in range(0, size, interval):
-
-            slice_end = slice_start + interval
-            freq_slice = freq_col[slice_start:slice_end]
-
-            nz_amps = np.count_nonzero(amp_col[slice_start:slice_end])
-            if nz_amps == 0:
-                new_col.extend(freq_slice)
-                continue
-
-            range_freq = sum(freq_slice) / nz_amps
-
-            if tune_freqs is True and range_freq != 0:
-                range_freq = get_closest(scale_notes, range_freq)
-
-            new_col+=[range_freq]*len(freq_slice)
-
-        for i, cell in enumerate(new_col):
-            if cell == 0:
-                if max(amp_col[max(0,i-1):i+2]) == 0:
-                    continue
-
-                new_col[i] = max(new_col[max(0,i-1):i+2])
-        
-        out_df[f'F{fmt}']=new_col
+        out_df[f'F{fmt}']=freq_col
         out_df[f'A{fmt}']=amp_col
 
     out_df.columns = [formants]+['']*(2*formants)
