@@ -1,18 +1,9 @@
 import pandas as pd
 import numpy as np
-from io import StringIO
 from subprocess import run
 from datetime import datetime
-from textwrap import dedent
 
 from spl_widgets.misc_util import *
-
-bad_file_str = dedent("""
-    File structure of {} is malformed and cannot be read by tune_freq
-    only .swx files created with stk_swx are guaranteed to work with tuner.
-    If this file was created with stk_swx, please alert me or Prof. Remez
-    and provide a copy of the file and its .stk equivalent (if possible)."""
-)
 
 def tune_col(
         freq_col: list[float],
@@ -59,16 +50,9 @@ def tune_cols(
         fmts_to_tune: list[int]|None
     ) -> str:
 
-    try:
-        df = pd.read_csv(
-            StringIO(open(filepath,'r').read()),
-            sep='\t', skiprows=[0], header=None
-        ).dropna(axis=1)
-    except Exception:
-        raise MalformedFileError(bad_file_str.format(filepath))
+    df = read_df(filepath)
 
     formants = len(df.columns)//2
-    size = df.shape[0]
     out_df = pd.DataFrame(df.iloc[:,0])
 
     if fmts_to_tune == None:

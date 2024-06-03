@@ -1,7 +1,27 @@
-from math import log
+from math import log, log10
+from textwrap import dedent
+import pandas as pd
+from io import StringIO
+
+bad_file_str = dedent("""
+    File structure of {} is malformed and cannot be read.
+    only .swx files created with stk_swx are guaranteed to work with tuner.
+    If this file was created with stk_swx, please alert me or Prof. Remez
+    and provide a copy of the file and its .stk equivalent (if possible)."""
+)
 
 # for use in stk_swx and tune_freq
 class MalformedFileError(Exception): pass
+
+def read_df(fp: str) -> pd.DataFrame:
+    try:
+        df = pd.read_csv(
+            StringIO(open(fp,'r').read()),
+            sep='\t', skiprows=[0], header=None
+        ).dropna(axis=1)
+        return df
+    except Exception:
+        raise MalformedFileError(bad_file_str.format(fp))
 
 # Stores notes of the chromatic scale for referencing
 notes=['A','A#','B','C','C#','D','D#','E','F','F#','G','G#']
@@ -18,11 +38,11 @@ def construct_default_scale(note: int, scale_type: str) -> list:
     return [(note+n)%12 or 12 for n in default_scales[scale_type]]
 
 # Converts notes in string form to their number equivalents, with A as key 1
-def str_scale_to_numbers(scale: "list[str]") -> "list[int]":
+def str_scale_to_numbers(scale: list[str]) -> list[int]:
     return sorted([notes.index(note.upper())+1 for note in scale])
 
 # Converts notes in number form to their string equivalents, with A as key 1
-def num_scale_to_strs(scale: "list[int]") -> "list[str]":
+def num_scale_to_strs(scale: list[int]) -> list[str]:
     return [notes[note-1] for note in sorted(scale)]
 
 # Converts note number to frequency
@@ -32,6 +52,12 @@ def to_freq(note: int) -> float:
 # Converts frequency to note number
 def to_note(freq: float) -> int:
     return round(log(freq/27.5, 2**(1/12))+1,4)
+
+def mel_to_freq(mel: float) -> float:
+    return 700 * (10**(mel/2595) - 1)
+
+def freq_to_mel(freq: float) -> float:
+    return 2595 * log10(1 + freq/700)
 
 # Get closest element to a target item in a list
 def get_closest(pool: list, target: float) -> float:
