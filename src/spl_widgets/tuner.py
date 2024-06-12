@@ -2,46 +2,9 @@ import tkinter as tk
 from tkinter import filedialog, ttk
 from spl_widgets.misc_util import *
 from spl_widgets.tune_freq import tune_cols
+from spl_widgets.util.gui_util import RadioFrame
 from subprocess import run
 from pathlib import Path
-
-class RadioFrame(tk.Frame):
-
-    def __init__(
-        self,
-        master: tk.Frame,
-        options: "list[str]",
-        label: str,
-        onchange: "function",
-        orientation="v",
-        **kwargs
-        ) -> tk.Frame:
-        tk.Frame.__init__(self, master, **kwargs)
-
-        self.master = master
-        self.variable = tk.IntVar()
-        self.onchange = lambda: onchange(self.variable) if onchange else None
-
-        packside = "top" if orientation == "v" else "left"
-        anchorside = "w" if orientation == "v" else "n"
-
-        self.label = tk.Label(self,text=label)
-        self.label.pack(side="top", anchor="w")
-
-        self.radios = [
-            tk.Radiobutton(self,text=o, variable=self.variable, value=i, command=self.onchange)
-            for i,o in enumerate(options)
-        ]
-        for b in self.radios:
-            b.pack(side=packside, anchor=anchorside)
-
-    def disable(self):
-        for b in self.radios:
-            b.configure(state="disabled")
-
-    def enable(self):
-        for b in self.radios:
-            b.configure(state="normal")
 
 class TunerApp(tk.Tk):
 
@@ -54,6 +17,7 @@ class TunerApp(tk.Tk):
     # (b == bit), (d == digit), (x == hex digit)
     # All formants tuned -> bdd-xxx
     # Specific formants tuned -> bdd-xxx-xx
+    # https://docs.google.com/drawings/d/1bKiHvlINsine1As0t5_E4fHAkb7JKxIh1xgnzI03tgA/edit
 
     def validate_key(self, *args):
         key = self.key_var.get()
@@ -292,7 +256,7 @@ class TunerApp(tk.Tk):
         file_radio_frame = RadioFrame(
             file_input_frame,
             options=['Single file', 'Directory'],
-            label="Object to Tune:",
+            label_text="Object to Tune:",
             orientation="h",
             onchange=self.change_file_type,
             pady=3
@@ -370,7 +334,7 @@ class TunerApp(tk.Tk):
         self.selector_radios_frame = RadioFrame(
             selector_frame,
             options=["Scale", "Notes"],
-            label="Tune File By:",
+            label_text="Tune File By:",
             onchange=self.showsel,
             pady=5
         )

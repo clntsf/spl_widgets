@@ -72,6 +72,15 @@ def tune_cols(
         out_df[f'F{fmt}']=freq_col
         out_df[f'A{fmt}']=amp_col
 
+    # Mel Scale Differencing (Summer 2024)
+    difference_df = pd.DataFrame({
+        "nat_mel": map(freq_to_mel, df[3]),
+        "tuned_mel": map(freq_to_mel, out_df["F2"]),
+        "amp": df[4]
+    })
+    difference_df = difference_df[difference_df["amp"] != 0]
+    data = ( difference_df["nat_mel"] - difference_df["tuned_mel"] ).abs()
+
     out_df.columns = [formants]+['']*(2*formants)
 
     # Makes, populates and creates a folder for tuned file
@@ -99,7 +108,13 @@ def tune_cols(
         f'Scale: {num_scale_to_strs(scale) if tune_freqs else "NOT TUNED"}',
         f"Tune Frequencies: {tune_freqs}",
         f"Formants Tuned: {fmts_to_tune}",
-        f'Tuning Key: {tuning_key}'
+        f'Tuning Key: {tuning_key}',
+
+        '\nMel Difference Stats:',
+        '*'*20,
+        f'Mean: {data.mean()}',
+        f'Median: {data.median()}',
+        f'Standard deviation: {data.std()}'
         ]
     
     with open(f'{out_dir_filepath}/params.txt','w') as writer:

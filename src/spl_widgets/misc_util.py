@@ -53,6 +53,7 @@ def to_freq(note: int) -> float:
 def to_note(freq: float) -> int:
     return round(log(freq/27.5, 2**(1/12))+1,4)
 
+# https://en.wikipedia.org/wiki/Mel_scale for these two
 def mel_to_freq(mel: float) -> float:
     return 700 * (10**(mel/2595) - 1)
 
