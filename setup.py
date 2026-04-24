@@ -5,7 +5,7 @@ import setuptools
 
 setuptools.setup(
     name="spl_widgets",
-    version="1.8.4",
+    version="1.8.6",
     author="Colin Simon-Fellowes",
     author_email="colin.tsf@gmail.com",
     description="Widgets for the Barnard Speech Perception Laboratory",

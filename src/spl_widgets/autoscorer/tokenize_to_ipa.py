@@ -99,7 +99,7 @@ def to_arpabet(sentence: str, keep_punct: bool = True) -> list[str]:
     return arpa_words[:-1]  # remove last added space to simplify the logic
 
 def to_arpabet_all(sentence: str, keep_punct: bool = True) -> list[list[str]]:
-    arpa_sentences: list[list[str]] = []
+    arpa_sentences: list[list[str]] = [[""]]
 
     for wd in sentence.split(" "):
 
@@ -169,7 +169,7 @@ LIGATURE_REPLACEMENTS = {
 }
 
 def _replace_ligatures(ipa_str: str) -> str:
-    for (lig, repl) in LIGATURE_REPLACEMENTS:
+    for (lig, repl) in LIGATURE_REPLACEMENTS.items():
         ipa_str = ipa_str.replace(lig, repl)
 
     return ipa_str
