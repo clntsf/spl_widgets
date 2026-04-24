@@ -69,7 +69,7 @@ def score_transcription(
         return sum((n[2] is True) for n in _prev_scored)
 
     def last_token_idx():
-        return max(n[1] for n in _prev_scored)
+        return max((n[1] for n in _prev_scored), default=0)
 
     # reached end of sentence IPA, so we mark any further transcription IPA tokens as extraneous and return
     if sentence_ipa == []:
@@ -84,8 +84,8 @@ def score_transcription(
         _prev_scored = []
 
     sentence_ipa_idx = 0
-
     for i, token in enumerate(transcription_ipa):
+
         absolute_idx = i+_prev_transcription_idx
         if not token.isalpha():                      # non-IPA (space) token
             continue
@@ -180,10 +180,10 @@ def output_scoring(
     """
 
     # color codes for to_rich_text()
-    RED = "\R"
-    GREEN = "\G"
-    YELLOW = "\Y"
-    CLEARSTYLE = "\C"
+    RED = "\\R"
+    GREEN = "\\G"
+    YELLOW = "\\Y"
+    CLEARSTYLE = "\\C"
 
     score, prev_scored = results
 
@@ -267,7 +267,7 @@ def process_inputs(
     )
 
     # get a tentative value for a column width to resize to
-    col_width = max(max(len(k) for k in  n) for n in inputs)
+    col_width = max((max(map(len,n), default=0) for n in inputs), default=0)
     col_width = max(20, col_width)                              # ensuring headers are not cropped
 
     total_score = [0,0]
@@ -360,7 +360,9 @@ def main(
 
         df = pd.read_excel(fp)
 
-    target = df["Target"]   # get target sentences
+    df.fillna("", inplace=True)
+
+    target = [ts.strip() for ts in df["Target"]] # get target sentences
 
     user_sentence_phoneme_scores: dict[str, dict[str,str|list[int]]] = {}
     # iterate through subject columns
@@ -376,8 +378,6 @@ def main(
 
     outpath = Path(out_dir, f"{out_fn}.xlsx")
     wb.save(outpath)
-
-    dfs = {}
 
     with pd.ExcelWriter(Path(out_dir, f"{out_fn}_PER_SEGMENT.xlsx"), engine="openpyxl") as writer:
         for (i, (sentence,scores)) in enumerate(user_sentence_phoneme_scores.items()):
