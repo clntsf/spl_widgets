@@ -5,7 +5,7 @@ import setuptools
 
 setuptools.setup(
     name="spl_widgets",
-    version="1.8.1",
+    version="1.8.4",
     author="Colin Simon-Fellowes",
     author_email="colin.tsf@gmail.com",
     description="Widgets for the Barnard Speech Perception Laboratory",
@@ -23,6 +23,7 @@ setuptools.setup(
     python_requires=">=3.8",
     entry_points='''
         [console_scripts]
+        open_overrides=spl_widgets.overrides.open_overrides:main
         gorilla_clean=spl_widgets.gorilla_clean:main
         tuner=spl_widgets.tuner:main
         stk_swx=spl_widgets.stk_swx:main

@@ -1,6 +1,6 @@
-Metadata-Version: 2.1
+Metadata-Version: 2.4
 Name: spl_widgets
-Version: 1.8.1
+Version: 1.8.4
 Summary: Widgets for the Barnard Speech Perception Laboratory
 Home-page: https://github.com/clntsf/spl_widgets
 Author: Colin Simon-Fellowes
@@ -14,3 +14,11 @@ Requires-Dist: pandas
 Requires-Dist: tkinterdnd2-universal
 Requires-Dist: openpyxl
 Requires-Dist: lxml
+Dynamic: author
+Dynamic: author-email
+Dynamic: classifier
+Dynamic: home-page
+Dynamic: license-file
+Dynamic: requires-dist
+Dynamic: requires-python
+Dynamic: summary

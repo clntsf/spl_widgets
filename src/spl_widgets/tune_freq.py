@@ -2,8 +2,11 @@ import pandas as pd
 import numpy as np
 from subprocess import run
 from datetime import datetime
+# import re
+# import pkg_resources
 
 from spl_widgets.misc_util import *
+# from spl_widgets.overrides.tuner_overrides import *
 
 def tune_col(
         freq_col: list[float],
@@ -101,6 +104,15 @@ def tune_cols(
 
     tuning_key = f"{ int(tune_freqs) }{ str(interval).zfill(2) }-{notes_tuning}-{fmts_tuned}"
 
+    # assign_lines = []
+    # print(run(["ls"], capture_output=True))
+    # overrides_fp = pkg_resources.resource_filename("spl_widgets", "overrides/tuner_overrides.py")
+    # with open(overrides_fp, "r") as reader:
+    #     assign_lines = []
+    #     for line in reader.readlines():
+    #         if (match:=re.match(r"([\w_]+\s*=\s*[\w_]+)", line)) is not None:
+    #             assign_lines.append(match.group())
+
     args=[
         'Tuning Parameters:',
         '*'*20,
@@ -115,8 +127,11 @@ def tune_cols(
         f'Mean: {data.mean()}',
         f'Median: {data.median()}',
         f'Standard deviation: {data.std()}'
-        ]
-    
+    ]
+    # if assign_lines != []:
+    #     args.append("\nOverrides Used:")
+    #     args += assign_lines
+
     with open(f'{out_dir_filepath}/params.txt','w') as writer:
         writer.write('\n'.join(args))
     

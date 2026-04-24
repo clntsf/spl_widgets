@@ -31,7 +31,7 @@ def to_note(freq):
     return round(log(freq/27.5, 2**(1/12))+1,4)
 
 # Get closest element to a target item in a list
-def get_closest(pool: list, target: int or float):
+def get_closest(pool: list, target: int | float):
     return min(pool, key=lambda x: abs(x-target))
 
 # Get all valid note frequencies given a scale of notes

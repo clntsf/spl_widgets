@@ -3,3 +3,4 @@ tests
 .vscode
 .gitignore
 .pyc
+__pycache__

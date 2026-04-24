@@ -163,9 +163,22 @@ def str_to_ipa(sentence: str, keep_punct: bool = False) -> list[str]:
     arpa_words = to_arpabet(sentence, keep_punct)
     return arpa_to_ipa(arpa_words)
 
+LIGATURE_REPLACEMENTS = {
+    "ʧ": "tʃ",
+    "ʤ": "dʒ",
+}
+
+def _replace_ligatures(ipa_str: str) -> str:
+    for (lig, repl) in LIGATURE_REPLACEMENTS:
+        ipa_str = ipa_str.replace(lig, repl)
+
+    return ipa_str
+
 # breaks up an idealized IPA string into tokens (might not be perfect, but it's definitely
 # mostly good, and worst case we just switch to passing them as a lists of tokens)
 def tokenize_ipa(ipa_str: str) -> list[str]:
+
+    ipa_str = _replace_ligatures(ipa_str)
     tokens = sorted(phonemes.values(), key=len, reverse=True)   # prioritize finding diphthongs
     token_re = rf"({'|'.join(tokens)}|\s|\*[\w\']*)"
 
